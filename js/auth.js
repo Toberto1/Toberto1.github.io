@@ -1,7 +1,12 @@
 import * as global from './globals.js';
 
 async function submitPassword() {
+  const un = document.getElementById('username').value;
   const pw = document.getElementById('password').value;
+  if (un === '') {
+    showError('Please enter a username.');
+    return;
+  }
   if (pw === '') {
     showError('Please enter a password.');
     return;
@@ -11,7 +16,7 @@ async function submitPassword() {
     const res = await fetch(`${global.API_IP}/api/auth/mmlogin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw }) // send password to backend
+      body: JSON.stringify({ username: un, password: pw })
     });
 
     const data = await res.json();
@@ -19,7 +24,7 @@ async function submitPassword() {
     if (res.ok) {
       // Save the token for later use
       localStorage.setItem('token', data.token);
-      window.location.href = 'index.html'; 
+      window.location.href = 'index.html';
     } else {
       showError(data.error || 'Login failed');
     }
