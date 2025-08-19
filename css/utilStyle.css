@@ -1,0 +1,33 @@
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+.white-flash {
+  animation: hitFlashWhite 0.5s ease-out;
+}
+
+.divider {
+    width: 100%;
+    border-bottom: 1px solid #000000;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.spacer {
+   flex: 0 0 10px;
+}
+
+
+@keyframes hitFlashWhite {
+  0% {
+    filter: brightness(5) saturate(1) contrast(1) grayscale(0) sepia(0) invert(0) opacity(1); 
+  }
+  100% {
+    filter: none;
+  }
+}

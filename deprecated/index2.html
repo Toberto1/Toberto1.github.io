@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Membership Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="utils.js" defer></script>
+    <script src="connect.js" defer></script>
+    <script src="script.js" defer ></script>
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="main-content">
+            <div class="container">
+                <div class="sticky-header">
+                    <h2 style="margin-left:15px;">Membership Management</h2>
+                    <div id="floatingToggleBtn" style="display: none;">
+                        <button class="floating-btn" onclick="toggleActivityLog()">☰</button>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="searchInput" class="search-box" placeholder="Search by name...">
+                        <button id="filterBtn" class="filter-btn" onclick="toggleFilterPanel()">Filter</button>
+                        <button id="filterUnlimitedBtn" class="type-btn unlimited" data-type="Unlimited Open Gym" onclick="filterByType('Unlimited Open Gym')" title="Click to filter by Unlimited">Unlimited</button>
+                        <button id="filterOpenGymBtn" class="type-btn open-gym" data-type="Open Gym" onclick="filterByType('Open Gym')" title="Click to filter by Open Gym">Open Gym</button>
+                        <button id="filterClassesBtn" class="type-btn classes" data-type="Classes" onclick="filterByType('Classes')" title="Click to filter by Classes">Classes</button>
+                        <button id="filterAthleticBtn" class="type-btn athletic" data-type="Athletic" onclick="filterByType('Athletic')" title="Click to filter by Athletic">Athletic</button>
+                        <button id="clearSearchBtn" class="clear-btn" onclick="clearSearch()">Clear</button>
+                        <div id="filterPanel" class="filter-panel" style="display: none;">
+                            <button class="type-badge unlimited" data-type="Unlimited Open Gym" onclick="filterByType('Unlimited Open Gym')">Unlimited</button>
+                            <button class="type-badge open-gym" data-type="Open Gym" onclick="filterByType('Open Gym')">Open Gym</button>
+                            <button class="type-badge classes" data-type="Classes" onclick="filterByType('Classes')">Classes</button>
+                            <button class="type-badge athletic" data-type="Athletic" onclick="filterByType('Athletic')">Athletic</button>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button id="toggleWaiverBtn" class="action-btn" styles="5px;margin-bottom:10px;">Smartwaiver</button>
+                        <button class="action-btn" onclick="showAddForm()" style="min-width: 130px;margin-left:5px;margin-bottom:10px;">Add New Member</button>
+                        <button class="refresh-btn" onclick="refreshData()" style="min-width: 130px;margin-left:5px;">Refresh</button>
+            
+                        <button id="orderNotification" class="order-btn" onclick="showOrders()">0</button>
+                    </div>
+                </div>
+                <div class="table-title">                    
+                    <span id="mainTitle" class="results-title">Loading...</span>
+                </div>
+                <div id="results" class="results">
+
+                    <iframe id="smartwaiverIframe" class="smartwaiver-iframe" src="https://app.smartwaiver.com/console" style="display: none; width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0;" sandbox="allow-scripts allow-same-origin"></iframe>
+
+                    <div id="monkeyOverlay" class="monkey-overlay">
+                        <dotlottie-player id="lottiePlayer" background="transparent" speed="1" style="width: 200px; height: 200px;" loop autoplay></dotlottie-player>
+                    </div>
+                   
+                    <div id="resultsContent" class="results-content">
+
+                        <div id="tableContainer">
+
+                           
+
+                        </div>
+
+                        <div id="addForm" class="add-form" style="display: none;">
+                            <div class="column">
+                                <label>Name:</label><input type="text" id="addName" placeholder="Last, First">
+                                <label>Email:</label><input type="text" id="addEmail" placeholder="example@domain.com">
+                                <label>Phone Number:</label><input type="text" id="addPhoneNumber" placeholder="xxx-xxx-xxxx">
+                            </div>
+                            <br>
+                            <fieldset class="membership-fieldset" id="addMembershipFieldset">
+                                <legend>Membership</legend>
+                                <div class="row">
+                                    <input type="checkbox" id="opt1" name="membershipType" value="open" />
+                                    <label for="opt1" class="checkbox-label openGymColour">Open Gym</label>
+
+                                    <input type="checkbox" id="opt2" name="membershipType" value="class" />
+                                    <label for="opt2" class="checkbox-label classesColour">Classes</label>
+
+                                    <input type="checkbox" id="opt3" name="membershipType" value="athletic" />
+                                    <label for="opt3" class="checkbox-label athleticColour">Athletic</label>
+                                </div>
+                                <div class="row" id="addAgeGroupRow" style="display: none;">
+                                    <label>Age Group:</label>
+                                    <select id="addAgeGroup" onchange="checkProfileContent('add')">
+                                        <option value="">Select Age Group</option>
+                                        <option value="kid">Kids</option>
+                                        <option value="teen">Teens</option>
+                                        <option value="adult">Adults</option>
+                                    </select>
+                                </div>
+                                <div class="row" id="addStartDateRow" style="display: none;">
+                                    <label>Start:</label>
+                                    <input type="date" id="addStartDate" onchange="calculateEndDate('add'); checkProfileContent('add')">
+                                    <button class="action-btn" onclick="setToday('addStartDate')" style="margin-left: 10px;">Today</button>
+                                    <button class="action-btn clear-date-btn" onclick="clearDatesOnly('addStartDate')">Clear</button>
+                                </div>
+                                <div class="row" id="addDurationRow" style="display: none;">
+                                    <label>Days:</label>
+                                    <input type="text" id="addAddedDays" class="days-input" min="0" step="1" oninput="calculateEndDate(); checkProfileContent('add')">
+                                    <div class="button-group" id="addDurationButtons">
+                                        <button class="action-btn" onclick="setAddedDays(30)" style="margin-left: 5px;">30</button>
+                                        <button class="action-btn" onclick="setAddedDays(90)">90</button>
+                                        <button class="action-btn" onclick="setAddedDays(180)">180</button>
+                                        <button class="action-btn" onclick="setAddedDays(360)">360</button>
+                                        <button class="action-btn" onclick="setAddedDays(-1)">Unlimited</button>
+                                    </div>
+                                </div>
+                                <div class="row" id="addEndDateRow" style="display: none;">
+                                    <label>End:</label>
+                                    <input type="date" id="addEndDate" readonly>
+                                </div>
+                            </fieldset>
+                            <fieldset class="passes-fieldset">
+                                <legend>Passes</legend>
+                                <div class="row">
+                                    <label>OpenGym:</label>
+                                    <input type="number" id="addOpenGymPunches" class="punch-input" min="0" step="1" oninput="checkProfileContent('add')">
+                                    <button class="action-btn" onclick="adjustPunches('addOpenGymPunches', -1)">USE</button>
+                                    <button class="action-btn" onclick="adjustPunches('addOpenGymPunches', 10)">+10</button>
+                                    <button class="action-btn" onclick="adjustPunches('addOpenGymPunches', 20)">+20</button>
+                                </div>
+                                <div class="row">
+                                    <label>Classes:</label>
+                                    <input type="number" id="addClassesPunches" class="punch-input" min="0" step="1" oninput="checkProfileContent('add')">
+                                    <button class="action-btn" onclick="adjustPunches('addClassesPunches', -1)">USE</button>
+                                    <button class="action-btn" onclick="adjustPunches('addClassesPunches', 10)">+10</button>
+                                    <button class="action-btn" onclick="adjustPunches('addClassesPunches', 20)">+20</button>
+                                </div>
+                                <div class="row">
+                                    <label>Private - Kids:</label>
+                                    <input type="number" id="addPrivateKidsPunches" class="punch-input" min="0" step="1" oninput="checkProfileContent('add')">
+                                    <button class="action-btn" onclick="adjustPunches('addPrivateKidsPunches', -1)">USE</button>
+                                    <button class="action-btn" onclick="adjustPunches('addPrivateKidsPunches', 5)">+5</button>
+                                </div>
+                                <div class="row">
+                                    <label>Private - Adults:</label>
+                                    <input type="number" id="addPrivateAdultsPunches" class="punch-input" min="0" step="1" oninput="checkProfileContent('add')">
+                                    <button class="action-btn" onclick="adjustPunches('addPrivateAdultsPunches', -1)">USE</button>
+                                    <button class="action-btn" onclick="adjustPunches('addPrivateAdultsPunches', 5)">+5</button>
+                                </div>
+                                <div class="row">
+                                    <label>Aerial Silks:</label>
+                                    <input type="number" id="addAerialSilksPunches" class="punch-input" min="0" step="1" oninput="checkProfileContent('add')">
+                                    <button class="action-btn" onclick="adjustPunches('addAerialSilksPunches', -1)">USE</button>
+                                    <button class="action-btn" onclick="adjustPunches('addAerialSilksPunches', 5)">+5</button>
+                                    <button class="action-btn" onclick="adjustPunches('addAerialSilksPunches', 10)">+10</button>
+                                </div>
+                            </fieldset>
+                            <fieldset class="notes-fieldset">
+                                <legend>Notes</legend>
+                                <textarea id="addNotes" class="note-box" placeholder="Add any additional notes here..."></textarea>
+                            </fieldset>
+                            <div class="row">
+                                <span id="confirmationMessage" class="confirmation-message"></span>
+                            </div>
+                            <div class="row">
+                                <button id="addMemberBtn" class="action-btn" onclick="addNewMember()" style="min-width: 61px;margin-left:15px;margin-bottom: 10px;">Add</button>
+                                <button class="cancel-btn" onclick="cancelAdd()" style="margin-bottom: 10px;">Cancel</button>
+                                <div id="addError" class="error-container"></div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="activityLog" class="daily-checkins-drawer open">
+            <div class="log-header">
+                <span class="log-title">Daily Check-Ins <span class="log-count">(0)</span></span>
+                <span class="log-date" id="logDate"></span>
+            </div>
+            <div id="logContent" class="log-content"></div>
+            <div class="stats-section">
+                <button class="stats-btn" onclick="toggleStatsDrawer()">Stats</button>
+            </div>
+        </div>
+        <div id="historyDrawer" class="history-drawer">
+            <div class="log-header">
+                <span class="log-title">History for <span id="historyMemberName"></span></span>
+                <button class="close-log-btn close-history-btn" onclick="closeHistoryDrawer()">Close</button>
+            </div>
+            <div id="historyLogContent" class="log-content"></div>
+            <div id="loadAllContainer" style="text-align: center; padding: 10px; display: none;">
+                <button id="loadAllHistoryBtn" class="action-btn" onclick="loadAllHistory()">Load All History</button>
+            </div>
+        </div>
+        <div id="ordersDrawer" class="orders-drawer">
+            <div class="log-header">
+                <span class="log-title">Square Online Orders <span class="log-count">(0)</span></span>
+                <button class="close-log-btn" onclick="closeOrdersDrawer()">Close</button>
+            </div>
+            <div id="ordersContent" class="log-content"></div>
+            <div class="transfers-section">
+                <div id="transferredOrdersContent" class="transferred-orders-content"></div>
+                <button class="transfers-btn" onclick="toggleTransferredOrders()">Completed Transfers</button>
+            </div>
+        </div>
+        <div id="statsDrawer" class="stats-drawer">
+            <div class="log-header">
+                <span class="log-title">Stats Overview</span>
+            </div>
+            <div class="stats-content">
+                <div class="stats-grid">
+                    <div class="stats-column">
+                        <h3>Memberships</h3>
+                        <div class="stats-item">
+                            <span class="log-details-bubble unlimited">Unlimited</span>
+                            <span id="unlimitedMembershipsStats">0</span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="log-details-bubble open-gym">Open Gym</span>
+                            <span id="openGymMembershipsStats">0</span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="log-details-bubble classes">Classes</span>
+                            <span id="classesMembershipsStats">0</span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="log-details-bubble athletic">Athletic</span>
+                            <span id="athleticMembershipsStats">0</span>
+                        </div>
+                    </div>
+                    <div class="stats-column">
+                        <h3>Passes</h3>
+                        <div class="stats-item">
+                            <span class="log-details-bubble open-gym">Open Gym</span>
+                            <span id="openGymPassesStats">0</span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="log-details-bubble classes">Classes</span>
+                            <span id="classesPassesStats">0</span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="log-details-bubble private-kids">Private - Kids</span>
+                            <span id="privateKidsPassesStats">0</span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="log-details-bubble private-adults">Private - Adults</span>
+                            <span id="privateAdultsPassesStats">0</span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="log-details-bubble aerial-silks">Aerial Silks</span>
+                            <span id="aerialSilksPassesStats">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="stats-bar">
+            <button class="bottom-bar-btn" data-drawer="daily-checkins" onclick="toggleActivityLog()">Daily Check-Ins</button>
+            <button id="orderNotificationMobile" class="bottom-bar-btn" data-drawer="orders" onclick="showOrders()">0</button>
+            <button class="bottom-bar-btn" data-drawer="stats" onclick="toggleStatsDrawer()">Stats Overview</button>
+        </div>
+    </div>
+</body>
+</html>

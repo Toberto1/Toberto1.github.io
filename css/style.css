@@ -1,0 +1,729 @@
+:root {
+
+    /* Preset Colors */
+    --openGym-color: #4caf50;
+    --classes-color: #2196f3;
+    --athletic-color: #ffb82a;
+
+    --expired-color: #8b0000;
+
+    --button-color: #c7c7c7;
+    --button-hover-color: #9b9b9b;
+    --button-toggle-color: #0dbe00;
+
+    --private-color: #f44336;
+    --aerial-color: #8c52ff;
+
+    --error-color: #a00101;
+    --success-color: #00be5c;
+
+    --pause-color: #e27902;
+
+
+    font-family: Arial;
+    font-size: 12px;
+
+    min-height: 100vh;
+    overflow-y: scroll;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* Main Structure */
+
+body {
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    gap: 30px;
+    align-items: center;
+
+    height: 100%;
+    margin: 1% 5%;
+}
+
+input::placeholder {
+    color: gray;
+    font-style: italic;
+    opacity: 0.6;
+}
+
+header {
+    height: 20%;
+    width: 100%;
+}
+
+main {
+    height: 70%;
+    width: 100%;
+}
+
+footer {
+    width: 100%;
+    height: 10%;
+}
+
+/* Inside Header */
+#search-container {
+    display: flex;
+    align-items: start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
+    height: 80%;
+}
+
+#search-filterButtons {
+    width: 100%;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Inside Main body */
+#main-container {
+    border: 2px solid #d8d8d8;
+
+    padding-top: 1em;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-top: 10px;
+    max-height: 460px;
+}
+
+
+
+
+/* Input */
+
+#searchInput {
+    width: 100%;
+    height: auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    transition-duration: 0.4s;
+}
+
+#searchInput:focus {
+    border-color: #000000;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+input[type="number"],
+input[type="text"] {
+    height: 2em;
+    padding-left: 5px;
+    border: 1px solid #ccc;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+
+
+
+
+/* Show the content of the selected tab */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active.originIsBlock {
+    display: block;
+}
+
+.tab-content.active.originIsFlex {
+    display: flex;
+}
+
+.tab-content.active.originIsGrid {
+    display: grid;
+}
+
+.tab-content-addAccount {
+    display: none;
+}
+
+.tab-content-addAccount.active.originIsBlock {
+    display: block;
+}
+
+.tab-content-addAccount.active.originIsFlex {
+    display: flex;
+}
+
+.tab-content-addAccount.active.originIsGrid {
+    display: grid;
+}
+
+.tab-content-editAccount {
+    display: none;
+}
+
+.tab-content-editAccount.active.originIsBlock {
+    display: block;
+}
+
+.tab-content-editAccount.active.originIsFlex {
+    display: flex;
+}
+
+.tab-content-editAccount.active.originIsGrid {
+    display: grid;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    font-weight: normal;
+    table-layout: fixed;
+}
+
+th,
+td {
+    padding: 0.5em 10px;
+    text-align: left;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    vertical-align: center;
+    align-items: left;
+}
+
+thead {
+    background-color: #f4f4f4;
+    font-size: 16px;
+    scrollbar-gutter: stable;
+    overflow-y: scroll;
+}
+
+
+tr {
+    width: 90%;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.fixed-header,
+.scrollableTable {
+
+    overflow-y: overlay;
+    padding: 0;
+    max-height: 350px;
+    scrollbar-gutter: stable;
+    scroll-padding: 0;
+
+}
+
+#searchResultsTable {
+    text-align: center;
+    height: 350px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.4em 10px;
+    background: var(--button-color);
+    color: #7e7e7e;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+    font-size: 14px;
+    height: 2.0em;
+
+    border: 2px solid #222;
+    border-right: none;
+    text-align: center;
+    min-width: 100px;
+}
+
+.sticker {
+    display: inline-block;
+    padding: 0.4em 1px;
+    background: #b1b1b1;
+    color: #000000;
+    border-radius: 6px;
+
+    border: 2px solid #222;
+    text-align: center;
+    min-width: 100px;
+    height: 2.0em;
+}
+
+.oldToNewSticker {
+    display: inline-block;
+    padding: 0.4em 0.5em;
+    background: rgba(5, 154, 208, 0.126);
+    color: rgb(5, 154, 208);
+    border-radius: 6px;
+
+    text-align: left;
+    height: 2.0em;
+}
+
+.additive-update {
+    background: rgba(35, 208, 5, 0.126);
+    color: rgb(25, 208, 5);
+}
+
+.subtractive-update {
+    background: rgba(208, 5, 5, 0.126);
+    color: rgb(208, 5, 5);
+}
+
+.membership-badge {
+    display: inline-block;
+    padding: 0.4em 1px;
+    background: var(--button-color);
+    color: #7e7e7e;
+    border-radius: 3px;
+    font-size: 14px;
+    height: 2.0em;
+    text-align: center;
+    border: 2px solid #333;
+    min-width: 90px;
+}
+
+
+
+.aerialsilkspasses-color {
+    background-color: var(--aerial-color);
+    color: #ffffff;
+}
+
+.open-color,
+.opengympasses-color {
+    background-color: var(--openGym-color);
+    color: #ffffff;
+}
+
+.class-color,
+.classpasses-color {
+    background-color: var(--classes-color);
+    color: #ffffff;
+}
+
+.privateadultpasses-color,
+.privatekidpasses-color {
+    background-color: var(--private-color);
+    color: #ffffff;
+}
+
+.athletic-color {
+    background-color: var(--athletic-color);
+    color: #000000;
+}
+
+.expired-color {
+    background-color: var(--expired-color) !important;
+    color: #ffffff !important;
+}
+
+/* Fieldsets */
+fieldset {
+    height: 100%;
+    padding: 0.5em;
+    transition-duration: 0.3s;
+    border: 2px solid #dfdfdf;
+    flex: 1;
+}
+
+fieldset:hover {
+    border: 2px solid #4c4c4c;
+}
+
+legend {
+    font-weight: bold;
+}
+
+.personal-info-fieldset {
+    flex-direction: column;
+    gap: 1em;
+    max-height: auto;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.membership-fieldset {
+    align-items: center;
+    overflow-y: scroll;
+}
+
+.membership-fieldset>.membership-row:nth-child(odd) {
+    background-color: #e5e4e4;
+    /* odd indexed .custom-child */
+}
+
+.membership-fieldset>.membership-row:nth-child(even) {
+    background-color: #ffffff;
+    /* even indexed .custom-child */
+}
+
+.submit-fieldset {
+    width: 100%;
+    display: flex;
+    justify-content: space-evenly;
+}
+
+
+
+#editAccount-container,
+#addAccount-container {
+    position: relative;
+    gap: 5em;
+    padding: 2rem;
+    font-weight: normal;
+
+    font-size: 13px;
+    align-items: start;
+
+    height: 400px;
+}
+.accountTabSelector-column {       /* needed for ::before positioning */
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    flex: 0 0 200px;
+    align-items: left;         /* center buttons horizontally */
+}
+
+
+/* Make sure buttons stay above the line */
+.accountTabSelector-column > label {
+    z-index: 1;
+    width: 90%;
+}
+
+.accountTabSelector-column input[type="radio"]:checked + label {
+  width: 100%;
+}
+
+
+
+.passAlterGrid {
+    font-weight: normal;
+    align-self: center;
+    justify-self: center;
+    display: grid;
+    grid-template-columns: 1.5fr 1.5fr 1fr 1fr 1fr;
+    text-align: left;
+    gap: 1em 10px;
+    /* only column gap, row spacing comes from align-content */
+
+    align-content: space-evenly;
+    /* space rows evenly inside container */
+    width: 50%;
+}
+
+.tooltipText {
+    color: gray;
+    font-style: italic;
+    opacity: 0.6;
+}
+
+
+textarea.note-box {
+    min-width: 300px;
+    height: 100%;
+    width: 100%;
+
+    font-style: italic;
+    padding: 5px;
+
+    border: none;
+    resize: none;
+    outline: none;
+    box-shadow: none;
+}
+
+
+input[type="number"] {
+    max-width: 4em;
+}
+
+label {
+    padding-top: 0.4em;
+}
+
+#editAccount-container {
+    justify-content: center;
+}
+
+
+
+.membership-row {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    margin-top: 10px;
+    padding: 0.5rem;
+    border: 2px solid #dfdfdf;
+    border-radius: 5px;
+    transition-duration: 0.5s;
+    gap: 1em;
+}
+
+
+
+
+.membership-row label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+}
+
+input[type="date"] {
+    padding: 0.2em 0;
+}
+
+.membership-row input[type="date"]:disabled {
+    background-color: #f0f0f0;
+    color: #555;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#custom-header-dialog {
+    position: fixed;
+    top: 10;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    z-index: 9999;
+    background-color: #222;
+    color: white;
+    padding: 1rem 3rem;
+    font-size: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    font-family: sans-serif;
+    border-radius: 10px;
+}
+
+#custom-header-dialog .close-btn {
+    background: none;
+    color: white;
+    font-size: 2.5rem;
+    border: none;
+    cursor: pointer;
+}
+
+#noAccountSelected {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #e6e6e6;
+    padding: 8px 16px;
+    
+    /* space inside the box */
+    border-radius: 6px;
+    /* optional: rounded corners */
+
+}
+
+.error-col {
+    background-color: var(--error-color) !important;
+}
+
+.success-col {
+    background-color: var(--success-color) !important;
+}
+
+.missing {
+    border: 2px solid #dc3545;
+}
+
+
+
+
+.custom-select {
+    padding: 0.5em 0;
+    font-size: 1rem;
+
+    border-radius: 6px;
+    border: 2px solid #000000;
+    cursor: pointer;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.custom-select:disabled {
+    border-color: #c5c5c5;
+}
+
+.custom-select:focus {
+    border-color: #000000;
+}
+
+.border-color-open {
+    border-color: var(--openGym-color);
+}
+
+.border-color-class {
+    border-color: var(--classes-color);
+}
+
+.border-color-athletic {
+    border-color: var(--athletic-color);
+}
+
+.paused-color {
+    background-color: var(--pause-color);
+    color: white;
+}
+
+.membership-widget-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1em;
+    align-items: end;
+}
+
+#log-container {
+    width: 100%;
+}
+
+.log-list {
+    width: 100%;
+    height: 330px;
+    overflow-y: scroll;
+}
+
+.log-filter-row {
+    position: absolute;
+    /* or fixed, as you prefer */
+    left: 30;
+    width: 100%;
+    z-index: 1000;
+
+    text-align: left;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    background-color: #eaeaea;
+
+    display: flex;
+    justify-content: start;
+    gap: 1rem;
+    padding-left: 1rem;
+    padding-bottom: 20px;
+    align-items: start;
+    height: 10;
+
+    text-align: center;
+
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+
+#log-result-text {
+    padding: 1.5em;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.log-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0.5em 10px;
+    text-align: left;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    vertical-align: center;
+    align-items: start;
+
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.log-entry-head {
+    align-items: center;
+    display: flex;
+    gap: 20px;
+    width: 100%;
+}
+
+.log-entry-subrow {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+}
+
+.log-entry-subrow> :nth-child(1) {
+    flex: 0 0 200px;
+}
+
+.log-entry-subrow> :nth-child(2) {
+    flex: 0 0 100px;
+}
+
+
+.log-list .log-entry:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.log-list .log-entry:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    height: 100%;
+
+    text-align: left;
+}
+
+.filter-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+
+}
+
+.preset-buttons button {
+    margin-right: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+
+
+
+.lottie-overlay {
+    opacity: 1;
+}
+
+.lottie-overlay.fadeOutAni {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    /* only here */
+
+}

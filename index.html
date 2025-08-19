@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Membership Management</title>
+    <link rel="icon" type="image/x-icon" href="favicon.png" sizes="500x500">
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/buttonStyle.css">
+    <link rel="stylesheet" href="css/utilStyle.css">
+
+    <script src="./js/lottiePlayer.js"></script>
+    <script type="module" src="./js/main.js" defer></script>
+</head>
+
+<body>
+
+    <header>
+        <div class="center">
+            <h1>Membership Management (2.0)</h1>
+        </div>
+        <br>
+        <div id="search-container">
+            <input type="text" id="searchInput" placeholder="Search by name (Last, First)">
+
+            <div id="search-filterButtons">
+
+                <p style="width: 7%">Filter By: </p>
+
+                <div><input type="checkbox" id="open-gym-filter" name="filterCheckboxes" class="filter-checkbox"
+                        value="open" />
+                    <label for="open-gym-filter" class="checkbox-label checkboxToggle open-color">Open</label>
+                </div>
+
+                <div><input type="checkbox" id="classes-filter" name="filterCheckboxes" class="filter-checkbox"
+                        value="open" />
+                    <label for="classes-filter" class="checkbox-label checkboxToggle class-color">Classes</label>
+                </div>
+
+                <div><input type="checkbox" id="athletic-filter" name="filterCheckboxes" class="filter-checkbox"
+                        value="open" />
+                    <label for="athletic-filter" class="checkbox-label checkboxToggle athletic-color">Athletic</label>
+                </div>
+
+                <div></div> <!-- Placeholder for spacing -->
+
+                <div><input type="button" id="clear-search" name="filterCheckboxes" value="open"
+                        class="custom-button" />
+                    <label for="clear-search" class="checkbox-label">Clear</label>
+                </div>
+
+
+
+                <div class="tab-container search-method-container">
+                    <p for="tab1">Search By: </p>
+
+                    <input type="radio" name="search-radio" id="filter-name" value="name" checked>
+                    <label for="filter-name">Name</label>
+
+                    <input type="radio" name="search-radio" id="filter-email" value="email">
+                    <label for="filter-email">Email</label>
+
+                    <input type="radio" name="search-radio" id="filter-number" value="phone_number">
+                    <label for="filter-number">Phone number</label>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="nav-row"></div>
+    </header>
+
+    <main>
+        <div class="tab-container">
+            <input type="radio" name="tabs" id="tab1" checked>
+            <label for="tab1">Search Users</label>
+
+            <input type="radio" name="tabs" id="tab4">
+            <label for="tab4">Upcoming Check-Ins</label>
+
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            
+            <input type="radio" name="tabs" id="addAccountTabButton">
+            <label for="addAccountTabButton">Add Account</label>
+
+            <input type="radio" name="tabs" id="editAccountTabButton">
+            <label for="editAccountTabButton">Edit Account</label>
+
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+
+            <input type="radio" name="tabs" id="tab3">
+            <label for="tab3">Log History</label>
+
+            
+        </div>
+
+
+
+        <div id="main-container">
+
+            <div class="center" style="padding-bottom: 0.5em;">
+                <h2 id="main-title">Title</h2>
+            </div>
+
+            <div id="searchAccount-container" class="tab-content originIsBlock">
+
+                <div class="scrollableTable">
+                    <table id="table-fixed-header">
+                        <colgroup>
+                            <col style="width: 15%;">
+                            <col style="width: 27%;">
+                            <col style="width: 25%;">
+                            <col style="width: 23%;">
+                            <col style="width: 10%;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th id="searchMethodTableHead">Name</th>
+                                <th>Memberships</th>
+                                <th>Passes</th>
+                                <th>Notes</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
+                <div class="scrollableTable">
+                    <table id="searchResultsTable">
+                        <colgroup>
+                            <col style="width: 15%;">
+                            <col style="width: 27%;">
+                            <col style="width: 25%;">
+                            <col style="width: 23%;">
+                            <col style="width: 10%;">
+                        </colgroup>
+                        <tbody id="searchResults"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="upcoming-container" class="tab-content originIsFlex">
+
+            </div>
+
+            <div id="addAccount-container" class="account-fieldset tab-content originIsFlex">
+                <div id = "addAccountNavColumn" class = "accountTabSelector-column tab-container">
+                    <input type="radio" name="addAccountTabs" id="personalInfoTab-add" checked>
+                    <label for="personalInfoTab-add">Personal Information</label>
+
+                    <input type="radio" name="addAccountTabs" id="memberhsipsTab-add">
+                    <label for="memberhsipsTab-add">Memberships</label>
+
+                    <input type="radio" name="addAccountTabs" id="passesTab-add">
+                    <label for="passesTab-add">Passes</label>
+
+                    <input type="radio" name="addAccountTabs" id="notesTab-add">
+                    <label for="notesTab-add">Notes</label>
+
+                    <div></div>
+                </div>
+            </div>
+
+            <div id="editAccount-container" class="account-fieldset tab-content originIsFlex">
+                <div id="noAccountSelected" style="text-align: center; padding: 1rem;">
+                    <p style="margin-bottom: 1em; font-size: 1.1rem; font-weight: bold;">No account selected to edit</p>
+                    <div class="center"><input type="button" value="Go to Search Tab"
+                            class="action-btn center clear-btn go-to-search"></div>
+
+                    <img src="images/noUserIcon.png" alt="No User Selected" style = "opacity: 0.1;">
+                </div>
+                <div id = "editAccountNavColumn" class = "accountTabSelector-column tab-container">
+                    <input type="radio" name="editAccountTabs" id="personalInfoTab-edit" checked>
+                    <label for="personalInfoTab-edit">Personal Information</label>
+
+                    <input type="radio" name="editAccountTabs" id="memberhsipsTab-edit">
+                    <label for="memberhsipsTab-edit">Memberships</label>
+
+                    <input type="radio" name="editAccountTabs" id="passesTab-edit">
+                    <label for="passesTab-edit">Passes</label>
+
+                    <input type="radio" name="editAccountTabs" id="notesTab-edit">
+                    <label for="notesTab-edit">Notes</label>
+
+                    <div></div>
+                </div>
+            </div>
+
+
+            <div id="log-container" class="tab-content originIsBlock">
+
+
+                <input type="button" class="action-btn" value="Filter ▼" id="filter-log-toggle-btn"
+                    style="border-bottom-right-radius: 0; border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                <input type="button" class="action-btn clear-btn" value="Refresh" onclick="loadLogResults()">
+
+                <div id="log-filter-row" class="log-filter-row hidden">
+
+                    <div class="filter-group" id="log-filter-startdate-container">
+                        <label for="log-start-date">Start Date</label>
+                        <input type="date" id="log-start-date">
+                    </div>
+
+                    <div class="filter-group" id="log-filter-enddate-container">
+                        <label for="log-end-date">End Date</label>
+                        <input type="date" id="log-end-date">
+                    </div>
+
+                    <div class="filter-group preset-buttons">
+                        <label>Presets</label>
+                        <input type="button" class="action-btn" value="Today" onclick="applyPreset('today')">
+                        <input type="button" class="action-btn" value="Last 7 Days" onclick="applyPreset('7')">
+                        <input type="button" class="action-btn" value="Last 30 Days" onclick="applyPreset('30')">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="log-action">Action Type</label>
+                        <select id="log-action-type">
+                            <option value="ALL">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-group preset-buttons">
+                        <label>Limit</label>
+                        <input type="number" id="log-row-limit" class="only-numbers" max="100" value="100">
+                    </div>
+
+                    <div class="filter-group" id="selectedAccountInfo-container">
+                        <label id="log-account-info">Filter by account</label>
+                        <input type="button" name="filterCheckboxes" value="Search for account"
+                            id="selectedAccountInfoButton" class="action-btn go-to-search clear-btn">
+                    </div>
+
+                    <div class="filter-group" style="margin-left: 3em">
+                        <label>Apply filters</label>
+                        <input type="button" class="action-btn go-btn" value="Apply" onclick="loadLogResults()">
+                    </div>
+                </div>
+                <p id="log-result-text">Showing results from xxx to xxx. (100) results</p>
+
+                <div class="log-list" id="log-list"></div>
+            </div>
+        </div>
+    </main>
+
+
+
+    <footer>
+        <div id="footer-content">
+
+        </div>
+    </footer>
+
+</body>
