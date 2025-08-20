@@ -44,6 +44,7 @@ input[type="checkbox"] {
     transition: all 0.2s ease;
     user-select: none;
     font-weight: bold;
+    box-shadow: 0 5px 0px rgb(0,0,0,0.1);
 }
 
 /* When the checkbox is checked, target the adjacent label */
@@ -268,3 +269,61 @@ input[type="button"].go-btn:hover {
 input[type="button"]:not(:disabled):active {
   background-color: white !important;
 }
+
+/* ================= Responsive Design ================= */
+
+/* Phones (≤ 600px) */
+@media (max-width: 600px) {
+  .checkbox-buttons {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .checkbox-label,
+  .search-method-container label,
+  .tab-container label,
+  input[type="button"].action-btn,
+  input[type="button"].badge-button {
+    padding: 6px 10px;
+  }
+
+  .tab-container {
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .search-method-container {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  input[type="button"].action-btn {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+/* Tablets (601px – 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .checkbox-buttons {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tab-container {
+    flex-wrap: wrap;
+  }
+
+  .search-method-container {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  input[type="button"].action-btn {
+    max-width: 80%;
+  }
+}
+
+/* Desktops (≥ 1025px) */
+/* (Your current styles already work fine for large screens) */
