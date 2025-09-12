@@ -52,20 +52,22 @@ export function whiteFlash(elementID) {
 
 
 export function daysBetweenISO(date1, date2) {
-    const toDateOnly = iso => {
-        const d = new Date(iso);
-        // Get date parts in local time zone
-        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    };
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
 
-    const d1 = toDateOnly(date1);
-    const d2 = toDateOnly(date2);
+    // strip time using UTC to avoid timezone issues
+    const utc1 = Date.UTC(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate());
+    const utc2 = Date.UTC(d2.getUTCFullYear(), d2.getUTCMonth(), d2.getUTCDate());
 
-    const diffTime = d2 - d1;
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return Math.floor((utc2 - utc1) / (1000 * 60 * 60 * 24));
 }
 
-
+export function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        // Modern API
+        return navigator.clipboard.writeText(text);
+    }
+}
 
 
 export function calculateEndDate(startDate, addedDays, totalDaysPaused) {
@@ -77,17 +79,17 @@ export function calculateEndDate(startDate, addedDays, totalDaysPaused) {
     if (isNaN(startDateObj.getTime())) {
         return startDate;
     }
-    console.log("addedDays:", addedDays);
+
     const totalDays = addedDays + totalDaysPaused;
 
     const endDate = new Date(startDateObj);
     endDate.setDate(startDateObj.getDate() + totalDays - 1); // Subtract 1 to include the start date in the count
 
-    return endDate.toISOString().split('T')[0];
+    return getDateOnly(endDate);
 }
 
 export function inputMissing(elementID) {
-    document.getElementById(elementID).classList.add('missing');
+    document.getElementById(elementID).classList.add("missing");
 }
 
 export function clearAll(parent, classType) {
@@ -120,13 +122,13 @@ export function kick() {
     window.location.href = '/auth.html';
 }
 
-export function formatPostgresDateForInput(pgDate) {
-    if (pgDate === null) return '';
-    const date = new Date(pgDate);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+export function getDateOnly(date) {
+    if (date instanceof Date) {
+        return date.toISOString().split('T')[0];
+    }
+    else if (typeof date === 'string') {
+        return date.split('T')[0];
+    }
 }
 
 export function isExpired(date) {
@@ -309,8 +311,99 @@ export function isLoading(elementId, isLoading, callId) {
     }
 }
 
+export function showTopHeaderDialog(message, options = {}) {
+    const existing = document.getElementById("custom-header-dialog");
+    if (existing) existing.remove(); // Only one at a time
 
+    const header = document.createElement("div");
+    header.id = "custom-header-dialog";
+    header.textContent = message;
 
+    // Optional close button
+    if (!options.noClose) {
+        const closeBtn = document.createElement("button");
+        closeBtn.innerHTML = "&times;";
+        closeBtn.className = "close-btn";
+        closeBtn.onclick = () => header.remove();
+        header.appendChild(closeBtn);
+    }
+
+    if (options.autoClose && options.duration) {
+        setTimeout(() => {
+            header.style.transition = "opacity 0.3s"; // fade duration
+            header.style.opacity = 0;                // start fading
+            setTimeout(() => {
+                header.remove();
+            }, 300); // match the transition duration
+        }, options.duration);
+    }
+    if (options.error) {
+        header.classList.add("error-col");
+    }
+    if (options.success) {
+        header.classList.add("success-col");
+    }
+
+    document.body.appendChild(header);
+    whiteFlash(header.id);
+}
+
+export function utcToLocal(utcString, options = {}) {
+    let d = new Date(utcString);
+
+    // Default formatting (local time)
+    let formatter = new Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        ...options
+    });
+
+    return formatter.format(d);
+}
+
+export function getTodayString() {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString().split('T')[0];
+}
+
+export function getCurrentDayOfTheWeek() {
+    return (new Date()).getDay();
+}
+export function getCurrentDayOfTheWeekUTC() {
+    return (new Date()).getUTCDay();
+}
+
+export function lockout(element, duration, disable = true) {
+    element.style.pointerEvents = "none";
+    element.style.opacity = "0.5";
+    element.disabled = disable;
+
+    setTimeout(() => {
+        element.style.pointerEvents = "";
+        element.style.opacity = "";
+        element.disabled = false;
+    }, duration);
+}
+
+export function getTimeRangeUTC(buffer) {
+    const now = new Date();
+    
+    // Get UTC components
+    const nowUTC = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds(),
+        now.getUTCMilliseconds()
+    );
+
+    const start = new Date(nowUTC - buffer * 60 * 1000);
+    const end = new Date(nowUTC + buffer * 60 * 1000);
+
+    return { start: start, end: end};
+}
 
 
 window.applyPreset = applyPreset;

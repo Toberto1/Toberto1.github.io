@@ -19,16 +19,24 @@
 <body>
 
     <header>
+        <br>
         <div class="center">
             <h1>Membership Management (2.0)</h1>
         </div>
         <br>
         <div id="search-container">
+
             <input type="text" id="searchInput" placeholder="Search by name (Last, First)">
 
             <div id="search-filterButtons">
 
-                <p style="width: 7%">Filter By: </p>
+                <select id="searchMethodSelect" class="custom-select" style="padding: 0.5em;">
+                    <option value="name">Search By Name</option>
+                    <option value="email">Search By Email</option>
+                    <option value="phone_number">Search By Phone</option>
+                </select>
+
+                <div></div> <!-- Placeholder for spacing -->
 
                 <div><input type="checkbox" id="open-gym-filter" name="filterCheckboxes" class="filter-checkbox"
                         value="open" />
@@ -54,18 +62,7 @@
 
 
 
-                <div class="tab-container search-method-container">
-                    <p for="tab1">Search By: </p>
 
-                    <input type="radio" name="search-radio" id="filter-name" value="name" checked>
-                    <label for="filter-name">Name</label>
-
-                    <input type="radio" name="search-radio" id="filter-email" value="email">
-                    <label for="filter-email">Email</label>
-
-                    <input type="radio" name="search-radio" id="filter-number" value="phone_number">
-                    <label for="filter-number">Phone number</label>
-                </div>
 
             </div>
 
@@ -75,29 +72,28 @@
     </header>
 
     <main>
-        <div class="tab-container">
+        <div class="tab-container" id="main-tab-container">
             <input type="radio" name="tabs" id="tab1" checked>
             <label for="tab1">Search Users</label>
 
-            <input type="radio" name="tabs" id="tab4">
-            <label for="tab4">Upcoming Check-Ins</label>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
 
-            <div class="spacer"></div>
-            <div class="spacer"></div>
-            
             <input type="radio" name="tabs" id="addAccountTabButton">
             <label for="addAccountTabButton">Add Account</label>
 
             <input type="radio" name="tabs" id="editAccountTabButton">
-            <label for="editAccountTabButton">Edit Account</label>
+            <label id="editAccountTabLabel" for="editAccountTabButton" class="hidden temp-color">Editting
+                Session</label>
 
             <div class="spacer"></div>
             <div class="spacer"></div>
+
+            <input type="radio" name="tabs" id="tab4">
+            <label for="tab4">Daily Check-ins</label>
 
             <input type="radio" name="tabs" id="tab3">
             <label for="tab3">Log History</label>
-
-            
         </div>
 
 
@@ -108,30 +104,29 @@
                 <h2 id="main-title">Title</h2>
             </div>
 
-            <div id="searchAccount-container" class="tab-content originIsBlock">
+            <div id="searchAccount-container" class="tab-content originIsFlex">
 
-                <div class="scrollableTable">
-                    <table id="table-fixed-header">
-                        <colgroup>
-                            <col style="width: 15%;">
-                            <col style="width: 27%;">
-                            <col style="width: 25%;">
-                            <col style="width: 23%;">
-                            <col style="width: 10%;">
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th id="searchMethodTableHead">Name</th>
-                                <th>Memberships</th>
-                                <th>Passes</th>
-                                <th>Notes</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
+                <table id="table-fixed-header">
+                    <colgroup>
+                        <col style="width: 15%;">
+                        <col style="width: 27%;">
+                        <col style="width: 25%;">
+                        <col style="width: 23%;">
+                        <col style="width: 10%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th id="searchMethodTableHead">Name</th>
+                            <th>Memberships</th>
+                            <th>Passes</th>
+                            <th>Notes</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                </table>
 
-                <div class="scrollableTable">
+                <!-- This is the scrollable container -->
+                <div class="scrollableTable" id="searchResultsTableCon">
                     <table id="searchResultsTable">
                         <colgroup>
                             <col style="width: 15%;">
@@ -145,12 +140,9 @@
                 </div>
             </div>
 
-            <div id="upcoming-container" class="tab-content originIsFlex">
-
-            </div>
 
             <div id="addAccount-container" class="account-fieldset tab-content originIsFlex">
-                <div id = "addAccountNavColumn" class = "accountTabSelector-column tab-container">
+                <div id="addAccountNavColumn" class="accountTabSelector-column tab-container">
                     <input type="radio" name="addAccountTabs" id="personalInfoTab-add" checked>
                     <label for="personalInfoTab-add">Personal Information</label>
 
@@ -173,9 +165,9 @@
                     <div class="center"><input type="button" value="Go to Search Tab"
                             class="action-btn center clear-btn go-to-search"></div>
 
-                    <img src="images/noUserIcon.png" alt="No User Selected" style = "opacity: 0.1;">
+                    <img src="images/noUserIcon.png" alt="No User Selected" style="opacity: 0.1;">
                 </div>
-                <div id = "editAccountNavColumn" class = "accountTabSelector-column tab-container">
+                <div id="editAccountNavColumn" class="accountTabSelector-column tab-container">
                     <input type="radio" name="editAccountTabs" id="personalInfoTab-edit" checked>
                     <label for="personalInfoTab-edit">Personal Information</label>
 
@@ -192,25 +184,46 @@
                 </div>
             </div>
 
+            <div id="dailyCheckin-container" class="tab-content originIsFlex">
+                <div id = "dailyCheckin-list" class = "dailyCheckin-list"> </div>
+                <div class="date-picker">
 
-            <div id="log-container" class="tab-content originIsBlock">
+                    <div id="dailyCheckin-info"></div>
+                    <!-- Hidden but functional input -->
+                    <input type="date" id="hiddenDate" style="display:none;">
 
+                    <!-- Custom label -->
+                    <button id="dateLabel" type="button">Select Date</button>
 
-                <input type="button" class="action-btn" value="Filter ▼" id="filter-log-toggle-btn"
-                    style="border-bottom-right-radius: 0; border-top-left-radius: 0; border-bottom-left-radius: 0;">
-                <input type="button" class="action-btn clear-btn" value="Refresh" onclick="loadLogResults()">
+                    <input type = "button" class = "action-btn clear-btn" value = "Refresh" id = "refresh-daily-checkins">
+
+                </div>
+
+                
+            </div>
+
+            <div id="log-container" class="tab-content originIsFlex">
+
+                <div id="log-filter-btn-row">
+                    <input type="button" class="action-btn" value="Filter ▼" id="filter-log-toggle-btn"
+                        style="border-bottom-right-radius: 0; border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                    <input type="button" class="action-btn go-btn" value="Refresh" onclick="loadLogResults()">
+
+                    <input type="button" class="action-btn cancel-btn hidden" value="Remove Account Filter"
+                        id="clearAccountFilterBtn">
+                </div>
 
                 <div id="log-filter-row" class="log-filter-row hidden">
 
                     <div class="filter-group" id="log-filter-startdate-container">
                         <label for="log-start-date">Start Date</label>
                         <input type="date" id="log-start-date">
-                    </div>
 
-                    <div class="filter-group" id="log-filter-enddate-container">
                         <label for="log-end-date">End Date</label>
                         <input type="date" id="log-end-date">
                     </div>
+
+            
 
                     <div class="filter-group preset-buttons">
                         <label>Presets</label>
@@ -224,36 +237,52 @@
                         <select id="log-action-type">
                             <option value="ALL">All</option>
                         </select>
-                    </div>
-                    <div class="filter-group preset-buttons">
                         <label>Limit</label>
                         <input type="number" id="log-row-limit" class="only-numbers" max="100" value="100">
                     </div>
-
-                    <div class="filter-group" id="selectedAccountInfo-container">
-                        <label id="log-account-info">Filter by account</label>
-                        <input type="button" name="filterCheckboxes" value="Search for account"
-                            id="selectedAccountInfoButton" class="action-btn go-to-search clear-btn">
+                    <div class="filter-group preset-buttons">
+                        
                     </div>
 
-                    <div class="filter-group" style="margin-left: 3em">
+                    <div class="filter-group" id="selectedAccountInfo-container">
                         <label>Apply filters</label>
                         <input type="button" class="action-btn go-btn" value="Apply" onclick="loadLogResults()">
                     </div>
+
                 </div>
-                <p id="log-result-text">Showing results from xxx to xxx. (100) results</p>
+                <div id="log-result-text">Showing results from xxx to xxx. (100) results</div>
 
                 <div class="log-list" id="log-list"></div>
             </div>
+
+            <div id="upcomingCheckins-container" class="tab-content originIsFlex">
+                <div id="upcomingClassRow" class="upcomingClassRow">
+    
+                </div>
+
+                <div class = "divider-row"><h2>Passes</h2></div>
+
+                <div id="upcomingCheckinsList">
+
+                </div>
+
+
+                <div class = "divider-row"><h2>Memberships</h2></div>
+
+                <div id="upcomingCheckinsTable">
+
+                    <div id ="upcoming-checkin-kids-list"></div>
+
+                    <div id ="upcoming-checkin-adults-list"></div>
+
+                    <div id ="upcoming-checkin-teens-list"></div>
+
+                </div>
+                   
+            </div>
+
+
         </div>
     </main>
-
-
-
-    <footer>
-        <div id="footer-content">
-
-        </div>
-    </footer>
 
 </body>

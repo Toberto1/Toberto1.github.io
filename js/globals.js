@@ -44,10 +44,11 @@ export function getselectedAccountForLog() {
 
 export const tabIndexs = {
     search: 0,
-    upcoming: 1,
-    addAccount: 2,
-    editAccount: 3,
-    logHistory: 4
+    addAccount: 1,
+    editAccount: 2,
+    dailyCheckins: 3,
+    logHistory: 4,
+    upcomingCheckins: 5, //Make sure is always last
 };
 
 export function getToken() {

@@ -16,7 +16,7 @@ let selectedAccountForEdit = null;
 
 // Function to get account details by name
 export async function searchAccount(value, searchMethod, filter) {
-    const myCallId = util.isLoading("searchResultsTable", true);
+    const myCallId = util.isLoading("searchAccount-container", true);
 
     try {
         const res = await fetch(`${IP}/api/users/searchUser`, {
@@ -43,7 +43,7 @@ export async function searchAccount(value, searchMethod, filter) {
         console.error('Error:', err);
         return null;
     } finally {
-        util.isLoading("searchResultsTable", false, myCallId);
+        util.isLoading("searchAccount-container", false, myCallId);
     }
 }
 
@@ -116,14 +116,40 @@ export function createPassList(account) {
                 usePass(account.id, key)
                     .then(response => {
                         if (response && response.success) {
-                            loadSearchTableResults().then(() => {
-                                util.whiteFlash(flex.id); // Flash the flex container to make it visually clear something happened
-                                editLock(1000);
-                            });
 
+
+                            // Fetch the updated account from the server
+                            fetch(global.API_IP + '/api/users/searchUserById', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${global.getToken()}`
+                                },
+                                body: JSON.stringify({ id: account.id })
+                            })
+                                .then(res => res.json())
+                                .then(updatedAccount => {
+                                    if (!updatedAccount) return;
+                                    document.getElementById(`search-entry-${account.id}`).replaceWith(createSearchEntry(updatedAccount));
+                                    util.whiteFlash(`search-entry-${account.id}`);
+                                    util.lockout(document.getElementById(`search-entry-${account.id}`), 3000);
+                                })
+                                .catch(err => {
+                                    console.error('Error fetching updated account:', err);
+                                });
+
+                            if (global.getselectedAccountForEdit() && global.getselectedAccountForEdit().id === account.id) {
+                                global.setSelectedAccountForEdit(null);
+                                dom.toggleEditTabButton();
+                            }
+
+                            editLock(3000);
+
+                            util.showTopHeaderDialog(`1 ${util.passDBToReadable(key)} pass used successfully!`, { success: true, autoClose: true, duration: 3000 });
                         }
                     });
             });
+
             flex.appendChild(passType);
             flex.appendChild(useButton);
         }
@@ -221,7 +247,8 @@ function usePass(userId, passType) {
     return fetch(`${IP}/api/users/usePass`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${global.getToken()}`
         },
         body: JSON.stringify({ userId, passType })
     })
@@ -248,103 +275,130 @@ export async function loadSearchTableResults() {
     }
     const atLeastOneFilter = (filter.open || filter.class || filter.athletic)
 
-    const defaultSearchResultTxt = '<tr><td colspan="4" class="tooltipText" style="vertical-align: top;">Use the search box at the top to find an account</td></tr>';
-    resultsBody.innerHTML = defaultSearchResultTxt;
+    // const defaultSearchResultTxt = '<tr><td colspan="4" class="tooltipText" style="vertical-align: top;">Use the search box at the top to find an account</td></tr>';
+    resultsBody.innerHTML = '';
 
-    if (searchTerm.length === 0 && !atLeastOneFilter) return;
+    if (searchTerm.length === 0 && !atLeastOneFilter) {
+
+        const row = document.getElementById("upcomingClassRow");
+        row.innerHTML = '';
+
+        const classes = await fetchUpcomingClasses();
+        const classRow = await loadClasses(classes.classes);
+
+        row.appendChild(classRow);
+
+        await createUpcomingPassCheckinList();
+        await createUpcomingMembershipCheckinList(classes.classes);
+
+
+        dom.swapTab(global.tabIndexs.upcomingCheckins);
+        return;
+    }
+
+    document.getElementById("table-fixed-header").classList.remove("hidden");
 
     const results = await searchAccount(searchTerm, searchMethod, filter);
 
     if (results && results.length > 0) {
         resultsBody.innerHTML = '';
         results.forEach(account => {
-            const row = document.createElement('tr');
-
-            const nameCol = document.createElement('td');
-            nameCol.textContent = account[global.getSearchMethod()];
-
-            const membershipsCol = document.createElement('td');
-            membershipsCol.appendChild(createMembershipList(account));
-
-            const passesCol = document.createElement('td');
-            passesCol.appendChild(createPassList(account));
-
-            const notesCol = document.createElement('td');
-            notesCol.textContent = account.notes;
-            notesCol.style.fontStyle = 'italic';
-            notesCol.style.color = '#555';
-
-            const editCol = document.createElement('td');
-
-            const editButton = document.createElement('input');
-            editButton.type = 'button'; editButton.value = 'Edit';
-            editButton.classList.add('edit-button');
-
-            editButton.addEventListener('click', () => {
-                // Handle edit action
-                console.log(`Editing account: ${account.name}`);
-                global.setSelectedAccountForEdit(account);
-                console.log(account);
-
-                dom.swapTab(global.tabIndexs.editAccount);
-                util.whiteFlash("editAccount-container");
-            });
-
-            const logButton = document.createElement('input');
-            logButton.type = 'button'; logButton.value = 'Logs';
-            logButton.classList.add('edit-button');
-            logButton.style.marginRight = "5px";
-
-            logButton.addEventListener('click', () => {
-                global.setSelectedAccountForLog(account);
-                util.applyPreset('alltime');
-                dom.swapTab(global.tabIndexs.logHistory);
-
-                util.toggleElement("selectedAccountInfoButton");
-
-                const container = document.getElementById("selectedAccountInfo-container");
-                const name = document.createElement("p"); name.textContent = account.name;
-                const email = document.createElement("p"); email.textContent = account.email;
-                const phone = document.createElement("p"); phone.textContent = account.phone_number;
-
-                container.appendChild(name);
-                container.appendChild(email);
-                container.appendChild(phone);
-
-                const removeBtn = document.createElement("input");
-                removeBtn.classList.add("action-btn", "cancel-btn"); removeBtn.value = "Clear Account Filter"; removeBtn.type = "button";
-                removeBtn.addEventListener("click", () => {
-                    global.setSelectedAccountForLog(null);
-                    util.applyPreset('today');
-                    loadLogResults();
-                    util.whiteFlash("log-container");
-                    util.toggleElement("selectedAccountInfoButton");
-
-                    container.removeChild(name);
-                    container.removeChild(email);
-                    container.removeChild(phone);
-                    container.removeChild(removeBtn);
-                });
-                container.appendChild(removeBtn);
-
-                loadLogResults();
-                util.whiteFlash("log-container");
-            });
-
-            editCol.appendChild(logButton);
-            editCol.appendChild(editButton);
-
-            row.appendChild(nameCol);
-            row.appendChild(membershipsCol);
-            row.appendChild(passesCol);
-            row.appendChild(notesCol);
-            row.appendChild(editCol);
-
-            resultsBody.appendChild(row);
+            resultsBody.appendChild(createSearchEntry(account));
         });
 
     } else resultsBody.innerHTML = '<tr><td colspan="4" class="tooltipText" style="vertical-align: top;">No Results Found</td></tr>';
 
+}
+
+function createSearchEntry(account, { disablePassList, disableMembershipList, disableNotes } = {}) {
+    const row = document.createElement('tr');
+    row.id = `search-entry-${account.id}`;
+    const nameCol = document.createElement('td');
+    nameCol.classList.add('clickable');
+
+    nameCol.textContent = account[global.getSearchMethod()];
+    nameCol.addEventListener('click', () => {
+        util.copyToClipboard(account[global.getSearchMethod()]);
+        util.showTopHeaderDialog(`Copied to clipboard: ${account[global.getSearchMethod()]}`, { success: true, autoClose: true, duration: 2000 });
+    });
+
+
+
+    const membershipsCol = document.createElement('td');
+    membershipsCol.appendChild(createMembershipList(account));
+
+    const passesCol = document.createElement('td');
+    passesCol.appendChild(createPassList(account));
+
+    const notesCol = document.createElement('td');
+    notesCol.textContent = account.notes;
+    notesCol.style.fontStyle = 'italic';
+    notesCol.style.color = '#555';
+
+    const editCol = document.createElement('td');
+
+    const editButton = document.createElement('input');
+    editButton.type = 'button'; editButton.value = 'Edit';
+    editButton.classList.add('edit-button');
+
+    editButton.addEventListener('click', () => {
+        if (editingLockout) return;
+        // Handle edit action
+        global.setSelectedAccountForEdit(account);
+        dom.toggleEditTabButton();
+        dom.swapTab(global.tabIndexs.editAccount);
+        util.whiteFlash("editAccount-container");
+        util.whiteFlash("editAccountTabLabel");
+    });
+
+    const logButton = document.createElement('input');
+    logButton.type = 'button'; logButton.value = 'Logs';
+    logButton.classList.add('edit-button');
+    logButton.style.marginRight = "5px";
+
+    logButton.addEventListener('click', () => {
+        if (editingLockout) return;
+        global.setSelectedAccountForLog(account);
+        util.applyPreset('alltime');
+        dom.swapTab(global.tabIndexs.logHistory);
+
+        const logContainer = document.getElementById("log-container");
+        const oldShortcut = logContainer.querySelector(".edit-shortcut");
+        if (oldShortcut) {
+            oldShortcut.remove();
+        }
+
+        const clonedEditButton = editButton.cloneNode(true);
+        clonedEditButton.value = `Edit ${account.name}`;
+        clonedEditButton.id = `log-container-edit-shortcut`;
+        clonedEditButton.classList.add('clear-btn', 'edit-shortcut');
+        clonedEditButton.addEventListener('click', () => {
+            // Handle edit action
+            global.setSelectedAccountForEdit(account);
+            dom.toggleEditTabButton();
+            dom.swapTab(global.tabIndexs.editAccount);
+            util.whiteFlash("editAccount-container");
+            util.whiteFlash("editAccountTabLabel");
+        });
+        document.getElementById("log-filter-btn-row").appendChild(clonedEditButton);
+        document.getElementById("clearAccountFilterBtn").classList.remove("hidden");
+
+        util.toggleElement("selectedAccountInfoButton");
+
+        loadLogResults();
+        util.whiteFlash("log-container");
+    });
+
+    editCol.appendChild(logButton);
+    editCol.appendChild(editButton);
+
+    row.appendChild(nameCol);
+    if (!disableMembershipList) row.appendChild(membershipsCol);
+    if (!disablePassList) row.appendChild(passesCol);
+    if (!disableNotes) row.appendChild(notesCol);
+    row.appendChild(editCol);
+
+    return row;
 }
 
 export async function loadLogResults() {
@@ -366,11 +420,21 @@ export async function loadLogResults() {
     const limitNum = parseInt(limitValue);
     if (isNaN(limitNum) || limitNum <= 0) return;
 
-    const startTime = `${startDateValue} 00:00:00`;
-    const endTime = `${endDateValue} 23:59:59.999`;
+    // startDateValue and endDateValue are strings like "2025-08-22"
+    const startTime = new Date(`${startDateValue}T00:00:00`).toISOString();
+    const endTime = new Date(`${endDateValue}T23:59:59.999`).toISOString();
 
-    const accountId = (global.getselectedAccountForLog() === null) ? null : global.getselectedAccountForLog().id;
-    const results = await fetchLogs(startTime, endTime, actionType, limitNum, parseInt(accountId));
+    const accountId = global.getselectedAccountForLog() === null ? null : global.getselectedAccountForLog().id;
+
+    const logs = await fetchLogs(
+        startTime,
+        endTime,
+        actionType,
+        limitNum,
+        parseInt(accountId)
+    );
+
+    const results = groupPassEntries(logs);
 
     resultsBodylog.innerHTML = ''; // clear old results
 
@@ -413,80 +477,88 @@ export async function loadLogResults() {
             const head = document.createElement('div');
             head.classList.add("log-entry-head");
 
-            const dateObj = new Date(firstLog.timestamp);
+            const timestamp = firstLog.timestamp;
+            const dateObj = new Date(timestamp);
             const options = {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 hour: 'numeric',
                 minute: '2-digit',
-                hour12: true
+                hour12: true,
             };
             const formattedDate = dateObj.toLocaleString('en-US', options);
 
             // Timestamp div
             const timestampDiv = document.createElement('div');
-            timestampDiv.textContent = `[${formattedDate}] `;
+            timestampDiv.textContent = formattedDate;
             timestampDiv.style.fontWeight = "bold";
 
-            // Name div
             const nameDiv = document.createElement('div');
             const hasName = !!firstLog.name;
-            nameDiv.textContent = hasName ? firstLog.name : 'Unknown User';
-            nameDiv.style.color = hasName ? '#0066cc' : '#999999';
-            nameDiv.style.cursor = hasName ? 'pointer' : 'default';
-            nameDiv.style.fontWeight = hasName ? 'bold' : 'normal';
-            if (hasName) {
-                nameDiv.addEventListener('click', () => {
-                    dom.swapTab(global.tabIndexs.search);
-                    global.setSearchMethod("name");
-                    document.getElementById("filter-name").checked = true;
-                    document.getElementById("searchMethodTableHead").innerHTML = "Name";
-                    document.getElementById("searchInput").value = firstLog.name;
-                    loadSearchTableResults();
-                });
-            }
-
-            // Email div
             const emailDiv = document.createElement('div');
             const hasEmail = !!firstLog.email;
-            emailDiv.textContent = hasEmail ? firstLog.email : 'unknown email';
-            emailDiv.style.color = hasEmail ? '#0066cc' : '#999999';
-            emailDiv.style.cursor = hasEmail ? 'pointer' : 'default';
-            emailDiv.style.fontWeight = hasEmail ? 'bold' : 'normal';
-            if (hasEmail) {
-                emailDiv.addEventListener('click', () => {
-                    dom.swapTab(global.tabIndexs.search);
-                    global.setSearchMethod("email");
-                    document.getElementById("filter-email").checked = true;
-                    document.getElementById("searchInput").value = firstLog.email;
-                    document.getElementById("searchMethodTableHead").innerHTML = "Email";
-                    loadSearchTableResults();
-                });
-            }
-
-            // Phone div
             const phoneDiv = document.createElement('div');
             const hasPhone = !!firstLog.phone_number;
-            phoneDiv.textContent = hasPhone ? firstLog.phone_number : 'unknown phone';
-            phoneDiv.style.color = hasPhone ? '#0066cc' : '#999999';
-            phoneDiv.style.cursor = hasPhone ? 'pointer' : 'default';
-            phoneDiv.style.fontWeight = hasPhone ? 'bold' : 'normal';
-            if (hasPhone) {
-                phoneDiv.addEventListener('click', () => {
-                    dom.swapTab(global.tabIndexs.search);
-                    global.setSearchMethod("phone_number");
-                    document.getElementById("filter-number").checked = true;
-                    document.getElementById("searchInput").value = firstLog.phone_number;
-                    document.getElementById("searchMethodTableHead").innerHTML = "Phone";
-                    loadSearchTableResults();
-                });
+
+            if (global.getselectedAccountForLog() === null) {
+
+                // Name div
+                nameDiv.textContent = hasName ? firstLog.name : 'Unknown User';
+                nameDiv.style.color = hasName ? '#0066cc' : '#999999';
+                nameDiv.style.cursor = hasName ? 'pointer' : 'default';
+                nameDiv.style.fontWeight = hasName ? 'bold' : 'normal';
+                if (hasName) {
+                    nameDiv.addEventListener('click', () => {
+                        dom.swapTab(global.tabIndexs.search);
+                        global.setSearchMethod("name");
+                        document.getElementById("searchMethodSelect").value = "name";
+                        document.getElementById("searchMethodTableHead").innerHTML = "Name";
+                        document.getElementById("searchInput").value = firstLog.name;
+                        loadSearchTableResults();
+                    });
+                }
+
+                // Email div
+                emailDiv.textContent = hasEmail ? firstLog.email : 'unknown email';
+                emailDiv.style.color = hasEmail ? '#0066cc' : '#999999';
+                emailDiv.style.cursor = hasEmail ? 'pointer' : 'default';
+                emailDiv.style.fontWeight = hasEmail ? 'bold' : 'normal';
+                if (hasEmail) {
+                    emailDiv.addEventListener('click', () => {
+                        dom.swapTab(global.tabIndexs.search);
+                        global.setSearchMethod("email");
+                        document.getElementById("searchMethodSelect").value = "email";
+                        document.getElementById("searchInput").value = firstLog.email;
+                        document.getElementById("searchMethodTableHead").innerHTML = "Email";
+                        loadSearchTableResults();
+                    });
+                }
+
+                // Phone div
+                phoneDiv.textContent = hasPhone ? firstLog.phone_number : 'unknown phone';
+                phoneDiv.style.color = hasPhone ? '#0066cc' : '#999999';
+                phoneDiv.style.cursor = hasPhone ? 'pointer' : 'default';
+                phoneDiv.style.fontWeight = hasPhone ? 'bold' : 'normal';
+                if (hasPhone) {
+                    phoneDiv.addEventListener('click', () => {
+                        dom.swapTab(global.tabIndexs.search);
+                        global.setSearchMethod("phone_number");
+                        document.getElementById("searchMethodSelect").value = "phone_number";
+                        document.getElementById("searchInput").value = firstLog.phone_number;
+                        document.getElementById("searchMethodTableHead").innerHTML = "Phone";
+                        loadSearchTableResults();
+                    });
+                }
             }
 
             head.appendChild(timestampDiv);
-            head.appendChild(nameDiv);
-            head.appendChild(emailDiv);
-            head.appendChild(phoneDiv);
+            if (global.getselectedAccountForLog() === null) {
+                head.appendChild(nameDiv);
+                if (hasEmail) head.appendChild(emailDiv);
+                if (hasPhone) head.appendChild(phoneDiv);
+            }
+
 
             row.appendChild(head);
 
@@ -501,20 +573,42 @@ export async function loadLogResults() {
                 changeDiv.classList.add("oldToNewSticker");
                 const oldValNum = parseFloat(log.old_value);
                 const newValNum = parseFloat(log.new_value);
+                if (log.old_value === "") log.old_value = '" "';
+                if (log.new_value === "") log.new_value = '" "';
 
-                if (!isNaN(oldValNum) && !isNaN(newValNum)) {
-                    if (oldValNum < newValNum)
+                switch (log.action) {
+                    case "PASS_AMOUNT_UPDATED":
+                        changeDiv.textContent = `${log.old_value} → ${log.new_value}`;
+                        if (newValNum - oldValNum > 0) changeDiv.classList.add("additive-update");
+                        else changeDiv.classList.add("subtractive-update");
+
+                        break;
+                    case "MEMBERSHIP_ADDED":
+                        changeDiv.textContent = `+${log.new_value} days`;
                         changeDiv.classList.add("additive-update");
-                    else if (oldValNum > newValNum)
-                        changeDiv.classList.add("subtractive-update");
+                        break;
+                    case "MEMBERSHIP_END_UPDATED":
+                    case "MEMBERSHIP_START_UPDATED":
+                        if (log.old_value === null) log.old_value = 'No Date';
+                        changeDiv.textContent = `${log.old_value} → ${log.new_value}`;
+                        break;
+                    default:
+                        if (log.old_value !== null && log.new_value !== null) {
+                            changeDiv.textContent = `${log.old_value} → ${log.new_value}`;
+                            
+                        }
+                        if (log.old_value === null && log.new_value !== null) changeDiv.textContent = `${log.new_value}`;
                 }
-                if (log.old_value === '') log.old_value = '" "';
-                if (log.new_value === '') log.new_value = '" "';
-                changeDiv.textContent = `${log.old_value} → ${log.new_value}`;
+                
+
+               
 
                 const fieldDiv = document.createElement('label');
                 fieldDiv.style.width = "10%";
                 fieldDiv.classList.add("sticker");
+
+
+
 
                 if (util.passDBToReadable(log.field) !== '') {
                     fieldDiv.textContent = util.passDBToReadable(log.field);
@@ -528,11 +622,29 @@ export async function loadLogResults() {
 
                 body.appendChild(actionDiv);
 
-                if (![global.logActions.ACCOUNT_ADDED, global.logActions.MEMBERSHIP_ADDED].includes(action)) {
+                const doNotShowFieldList = [
+                    global.logActions.ACCOUNT_ADDED,
+                    global.logActions.MEMBERSHIP_ADDED,
+                    global.logActions.MEMBERSHIP_END_UPDATED,
+                    global.logActions.MEMBERSHIP_START_UPDATED,
+                    global.logActions.MEMBERSHIP_PAUSE_UPDATED,
+                    global.logActions.MEMBERSHIP_TYPE_UPDATED,
+                    global.logActions.MEMBERSHIP_CLOSE_UPDATED,
+                    global.logActions.MEMBERSHIP_AGE_UPDATED,
+                    global.logActions.MEMBERSHIP_UNLIMITED_UPDATED,
+                    global.logActions.MEMBERSHIP_LENGTH_UPDATED,
+                    global.logActions.NOTE_UPDATED,
+
+                    global.logActions.NAME_UPDATED,
+                    global.logActions.EMAIL_UPDATED,
+                    global.logActions.PHONE_UPDATED,
+                ];
+                if (!doNotShowFieldList.includes(action)) {
                     body.appendChild(fieldDiv);
-                    body.appendChild(changeDiv);
+
                 }
 
+                body.appendChild(changeDiv);
                 row.appendChild(body);
             }
 
@@ -557,12 +669,30 @@ export async function loadLogResults() {
         : `${formattedStart} to ${formattedEnd}`;
     const logResultText = document.getElementById("log-result-text");
     const selectedOptionText = actionTypeInput.querySelector(`option[value="${actionTypeInput.value}"]`)?.textContent;
-    logResultText.innerHTML = `Showing results from <strong>${resultDate}</strong> for <strong>${selectedOptionText}</strong> actions`;
+    let html = `<p>Showing results from <strong>${resultDate}</strong> for <strong>${selectedOptionText}</strong> actions`;
 
-    if (global.getselectedAccountForLog() !== null)
-        logResultText.innerHTML += ` (History for <strong> ${global.getselectedAccountForLog().name}</strong>) `;
+    const selectedAccount = global.getselectedAccountForLog();
+    if (selectedAccount !== null) {
+        html += ` (History for <span id="log-container-search-shortcut"> ${selectedAccount.name}</span>)`;
 
-    logResultText.innerHTML += ` <span style="color: #666; font-style: italic;"> (${results.length})</span>`;
+    }
+
+    html += ` <span style="color: #666; font-style: italic;">(${results.length})</span></p>`;
+
+    logResultText.innerHTML = html;
+
+
+
+    document.getElementById("log-container-search-shortcut")?.addEventListener("click", () => {
+        dom.swapTab(global.tabIndexs.search);
+        global.setSearchMethod("name");
+        document.getElementById("searchMethodSelect").value = "name";
+        document.getElementById("searchMethodTableHead").innerHTML = "Name";
+        document.getElementById("searchInput").value = global.getselectedAccountForLog().name;
+        loadSearchTableResults();
+    });
+
+
 }
 
 
@@ -599,22 +729,321 @@ export async function fetchLogs(startTime, endTime, actionType, limit, accountId
     }
 }
 
+export async function loadDailyCheckins(date) {
+
+    const data = await fetchDailyCheckins(date);
+
+    const container = document.getElementById("dailyCheckin-container");
+    container.style.fontSize = "14px";
+
+    const list = document.getElementById("dailyCheckin-list");
+    list.innerHTML = ''; // clear old entries
+
+    const entries = groupPassEntries(data);
+
+    const infoDiv = document.getElementById("dailyCheckin-info");
+    infoDiv.style.textAlign = "center";
+    infoDiv.style.marginTop = "2em";
+    infoDiv.style.color = "#666";
+    infoDiv.innerHTML = ''; // clear old info
+    if (entries.length > 0) {
+        const totalCheckins = entries.length;
+        infoDiv.innerHTML = `Total Check-ins - (${totalCheckins})`;
+    }
+
+    if (entries.length === 0) {
+        const noData = document.createElement("div");
+        noData.style.padding = "1.5em";
+        noData.style.fontSize = "14px";
+        noData.textContent = "No check-ins for this date.";
+        list.appendChild(noData);
+    } else {
+        entries.forEach(entry => {
+            const entryDiv = document.createElement("div");
+            entryDiv.classList.add("dailyCheckin-entry");
+
+            const nameDiv = document.createElement("div");
+            nameDiv.textContent = entry.name;
+            nameDiv.style.fontWeight = "bold";
+            nameDiv.style.color = entry.name ? "#0066cc" : "#999999";
+            nameDiv.style.cursor = entry.name ? "pointer" : "default";
+
+            if (entry.name) {
+                nameDiv.addEventListener("click", () => {
+                    dom.swapTab(global.tabIndexs.search);
+                    global.setSearchMethod("name");
+                    document.getElementById("searchMethodSelect").value = "name";
+                    document.getElementById("searchMethodTableHead").innerHTML = "Name";
+                    document.getElementById("searchInput").value = entry.name;
+                    loadSearchTableResults();
+                });
+            }
+
+            const timeDiv = document.createElement("div");
+            const timeObj = new Date(entry.timestamp);
+            const options = { hour: 'numeric', minute: '2-digit', hour12: true };
+            timeDiv.textContent = timeObj.toLocaleString("en-US", options);
+
+            const actionDiv = document.createElement("div");
+            actionDiv.textContent = global.logActions[entry.action];
+
+            const fieldDiv = document.createElement("div");
+            fieldDiv.textContent = util.passDBToReadable(entry.field);
+
+            if (fieldDiv.textContent !== '') {
+                fieldDiv.classList.add("sticker");
+
+                if (util.passDBToReadable(entry.field) !== '') {
+                    fieldDiv.textContent = util.passDBToReadable(entry.field);
+                    fieldDiv.classList.add(`${entry.field}-color`);
+                } else {
+                    fieldDiv.textContent = entry.field;
+                }
+            }
+
+            const valueDiv = document.createElement("div");
+            if (entry.new_value !== null) valueDiv.classList.add("oldToNewSticker");
+            valueDiv.textContent = "";
+
+            switch (entry.action) {
+                case "PASS_AMOUNT_UPDATED":
+                    const diff = entry.new_value - entry.old_value;
+                    valueDiv.textContent = `${diff > 0 ? "+" : ""}${diff}`;
+
+                    if (diff > 0) valueDiv.classList.add("additive-update");
+                    else valueDiv.classList.add("subtractive-update");
+
+                    break;
+                case "MEMBERSHIP_ADDED":
+                    valueDiv.textContent = `+${entry.new_value} days`;
+                    valueDiv.classList.add("additive-update");
+                    break;
+                default:
+                    if (entry.old_value !== null && entry.new_value !== null) {
+                        valueDiv.textContent = `${entry.old_value} → ${entry.new_value}`;
+                    }
+            }
+
+            entryDiv.appendChild(timeDiv);
+            entryDiv.appendChild(nameDiv);
+            entryDiv.appendChild(actionDiv);
+            entryDiv.appendChild(fieldDiv);
+            entryDiv.appendChild(valueDiv);
+
+            list.appendChild(entryDiv);
+        });
+    }
+    util.whiteFlash("dailyCheckin-list");
+}
+
+function groupPassEntries(entries) {
+    const mergedEntries = entries.slice();
+
+    for (let i = mergedEntries.length - 2; i >= 0; i--) {
+        const current = mergedEntries[i];
+        const next = mergedEntries[i + 1];
+
+        if (
+            current.action === "PASS_AMOUNT_UPDATED" &&
+            next.action === "PASS_AMOUNT_UPDATED" &&
+            current.field === next.field &&
+            current.name === next.name
+        ) {
+            const currentTime = new Date(current.timestamp);
+            const nextTime = new Date(next.timestamp);
+
+            // Compare up to the minute
+            if (
+                currentTime.getFullYear() === nextTime.getFullYear() &&
+                currentTime.getMonth() === nextTime.getMonth() &&
+                currentTime.getDate() === nextTime.getDate() &&
+                currentTime.getHours() === nextTime.getHours() &&
+                currentTime.getMinutes() === nextTime.getMinutes()
+            ) {
+                // Merge into next
+                next.new_value = current.new_value;
+                mergedEntries.splice(i, 1); // Remove current
+                // no i++ needed because we're going backwards
+            }
+        }
+    }
+
+    return mergedEntries;
+}
+async function fetchUpcomingClasses() {
+    const BUFFER_MINUTES = 15;
+    const now = new Date();
+
+    // Helper to format as "HH:MM:SS"
+    const formatTime = (date) => {
+        return date.toTimeString().split(" ")[0];
+    };
+
+    const center = now;
+    //const center = new Date(2025, 8, 26, 18, 0, 0);
+
+    // Start = current time - buffer
+    const start = new Date(center.getTime() - BUFFER_MINUTES * 60 * 1000);
+    // End = current time + buffer
+    const end = new Date(center.getTime() + BUFFER_MINUTES * 60 * 1000);
+
+    const start_time = formatTime(start);
+    const end_time = formatTime(end);
+
+    const response = await fetch(`${IP}/api/classes/fetchClasses`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${global.getToken()}`
+        },
+        body: JSON.stringify({
+            day: util.getCurrentDayOfTheWeek() + 1,
+            startTime: start_time,
+            endTime: end_time
+        })
+    });
+
+    if (response.status === 401) {
+        util.kick(); // token invalid or expired
+        return null;
+    }
+
+    const data = await response.json();
+    return data;
+}
+
+export async function loadClasses(classArray) {
+    return dom.createUpComingClassRow(classArray);
+}
+
+async function fetchUpcomingCheckins(day, startTime, endTime) {
+    const response = await fetch(`${IP}/api/users/fetchUpcomingCheckins`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${global.getToken()}`
+        },
+        body: JSON.stringify({
+            day,
+            startTime,
+            endTime
+        })
+    });
+
+    if (response.status === 401) {
+        util.kick(); // token invalid or expired
+        return null;
+    }
+
+    const data = await response.json();
+    return data;
+}
+
+async function createUpcomingPassCheckinList() {
+    const container = document.getElementById("upcomingCheckinsList");
+    container.innerHTML = '';
+
+    const { start, end } = util.getTimeRangeUTC(15);
+
+    const formatTime = (date) => date.toISOString().split("T")[1];
+
+    const checkins = await fetchUpcomingCheckins(util.getCurrentDayOfTheWeekUTC(), formatTime(start), formatTime(end));
+    checkins.forEach(checkin => {
+        const entry = createSearchEntry(checkin);
+        container.appendChild(entry);
+    });
+}
+
+async function createUpcomingMembershipCheckinList(classes) {
+    const container = document.getElementById("upcomingCheckinsTable");
+    console.log(container);
+    // container.innerHTML = '';
+
+    let hasAthletic = false;
+    let hasNormal = false;
+
+    for (const cls of classes) {
+        if (cls.name === "Athletic") hasAthletic = true;
+        else hasNormal = true;
+    }
+
+    if (!hasAthletic && !hasNormal) {
+        container.innerHTML = '<div style="padding: 1.5em; font-size: 14px;">No upcoming check-ins for memberships</div>';
+        return;
+    }
+
+    const filter = { open: false, class: hasNormal, athletic: hasAthletic };
+    const results = await searchAccount("", "name", filter);
+    console.log(results);
+    const kidsList = document.getElementById("upcoming-checkin-kids-list");
+    console.log(kidsList);
+    const adultsList = document.getElementById("upcoming-checkin-adults-list");
+    const teensList = document.getElementById("upcoming-checkin-teens-list");
+
+    kidsList.innerHTML = '<h3 style="margin-bottom: 0.5em; text-align: center;">Kids</h3>';
+    adultsList.innerHTML = '<h3 style="margin-bottom: 0.5em; text-align: center;">Adults</h3>';
+    teensList.innerHTML = '<h3 style="margin-bottom: 0.5em; text-align: center;">Teens</h3>';
+
+    if (results && results.length > 0) {
+
+        for (const account of results) {
+            for (const membership of account.memberships) {
+
+                if (membership.is_closed) continue;
+                if (util.isExpired(membership.end_date)) continue;
+
+                if (membership.age_group === "kid") {
+                    kidsList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true }));
+                    console.log(account);
+
+                }
+                else if (membership.age_group === "adult") {
+                    adultsList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true }));
+
+                }
+                else if (membership.age_group === "teen") {
+                    teensList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true }));
+
+                }
+            }
+        }
+
+    }
+
+}
+
+async function fetchDailyCheckins(date) {
+    const dateStr = date;
+    const response = await fetch(`${IP}/api/logs/fetchDailyCheckins`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${global.getToken()}`
+        },
+        body: JSON.stringify({ date: dateStr })
+    });
+
+    if (response.status === 401) {
+        util.kick(); // token invalid or expired
+        return null;
+    }
+
+    const data = await response.json();
+    return data;
+}
+
 window.loadLogResults = loadLogResults;
+window.loadDailyCheckins = loadDailyCheckins;
 
 
 function editLock(lockoutTime) {
     if (editingLockout) return; // Prevent multiple edits at once
     editingLockout = true;
 
-    document.querySelectorAll('input[type="button"]').forEach(button => {
-        button.classList.add('editLockout');
-    });
+
 
     setTimeout(() => {
         editingLockout = false; // Release lock after operation
-        document.querySelectorAll('input[type="button"]').forEach(button => {
-            button.classList.remove('editLockout');
-        });
     }, lockoutTime);
 }
 
@@ -624,3 +1053,17 @@ function editLock(lockoutTime) {
 
 
 
+/* google calendar link format
+const title = "Meeting with Tobi";
+const details = "Talk about project progress";
+const location = "Toronto, Canada";
+
+// Start and end in UTC, format: YYYYMMDDTHHmmssZ
+const start = "20250908T150000Z";
+const end = "20250908T160000Z";
+
+const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}&dates=${start}/${end}`;
+
+window.open(url, "_blank");
+
+*/

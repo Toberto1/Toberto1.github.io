@@ -6,6 +6,7 @@ import * as global from './globals.js';
 
 const token = localStorage.getItem('token');
 
+
 if (!token) {
     window.location.href = '/auth.html';
 } else {
@@ -26,9 +27,29 @@ if (!token) {
         });
 }
 
+const VERSION = "1.0.1";
 
-//
-const backendIP = global.API_IP;
+async function checkVersion() {
+    try {
+        const res = await fetch(`${global.API_IP}/api/mmVersion`, { cache: "no-store" });
+        const { version: currentVersion } = await res.json();
+
+        if (currentVersion !== VERSION) {
+            showTopHeaderDialog("An update is being rolled out... please wait", { error: true });
+            setTimeout(() => util.kick(), 3000); // force reload, bypass cache
+        }
+    } catch (err) {
+        showTopHeaderDialog("Failed to check version. Please refresh the page.", { error: true });
+        console.error("Version check failed", err);
+    }
+}
+
+// Check every 5 minutes
+setInterval(checkVersion, 15 * 60 * 1000);
+
+// Also check immediately on page load
+checkVersion();
+
 
 
 //Get DOM elements
@@ -39,9 +60,6 @@ const resultsBody = document.getElementById('searchResults');
 const addAccountContainer = document.getElementById("addAccount-container");
 
 const filterRow = document.querySelectorAll(".filter-checkbox");
-
-
-
 
 //Initialize functionality varaibles
 let tabOpen = 0;
@@ -74,6 +92,8 @@ window.addEventListener('DOMContentLoaded', () => {
     //set up log filters
     util.applyPreset('today');
     api.loadLogResults();
+
+    api.loadDailyCheckins(new Date().toISOString().split('T')[0]);
 });
 
 document.getElementById("clear-search").addEventListener("click", () => {
@@ -96,6 +116,22 @@ document.querySelectorAll('input, select').forEach((element) => {
         element.classList.remove("missing");
     });
 });
+
+document.getElementById("clearAccountFilterBtn").addEventListener("click", () => {
+    global.setSelectedAccountForLog(null);
+    util.applyPreset('today');
+
+    util.whiteFlash("log-container");
+
+    util.toggleElement("selectedAccountInfoButton");
+    util.toggleElement("clearAccountFilterBtn");
+
+    document.getElementById("log-container-edit-shortcut")?.remove();
+
+    api.loadLogResults();
+});
+
+
 
 //Input listener for tab element
 document.querySelectorAll('input[name="tabs"]').forEach((radio, index) => {
@@ -123,22 +159,30 @@ document.querySelectorAll('input[name="editAccountTabs"]').forEach((radio, radio
     });
 });
 
-document.querySelectorAll('input[name="search-radio"]').forEach((radio, index) => {
-    radio.addEventListener('change', () => {
-        global.setSearchMethod(radio.value);
-        console.log(global.getSearchMethod());
-        switch (global.getSearchMethod()) {
-            case "name": searchBar.placeholder = "Search by name (Last, First)";
-                document.getElementById("searchMethodTableHead").innerHTML = "Name"; break;
-            case "email": searchBar.placeholder = "Search by email (example@domain.com)";
-                document.getElementById("searchMethodTableHead").innerHTML = "Email"; break;
-            case "phone_number": searchBar.placeholder = "Search by phone number (xxx-xxx-xxxx)";
-                document.getElementById("searchMethodTableHead").innerHTML = "Phone"; break;
-        }
-        api.loadSearchTableResults();
-        util.whiteFlash("search-container");
-    });
+const searchMethodSelect = document.getElementById("searchMethodSelect");
+searchMethodSelect.addEventListener("change", () => {
+    const method = searchMethodSelect.value;
+    global.setSearchMethod(method);
+
+    switch (method) {
+        case "name":
+            searchBar.placeholder = "Search by name (Last, First)";
+            document.getElementById("searchMethodTableHead").innerText = "Name";
+            break;
+        case "email":
+            searchBar.placeholder = "Search by email (example@domain.com)";
+            document.getElementById("searchMethodTableHead").innerText = "Email";
+            break;
+        case "phone_number":
+            searchBar.placeholder = "Search by phone number (xxx-xxx-xxxx)";
+            document.getElementById("searchMethodTableHead").innerText = "Phone";
+            break;
+    }
+
+    api.loadSearchTableResults();
+    util.whiteFlash("search-container");
 });
+
 
 document.querySelectorAll(".go-to-search").forEach(button => {
     button.addEventListener("click", () => {
@@ -186,7 +230,13 @@ searchBar.addEventListener('input', util.debounce(async (e) => {
 window.addMembershipRow = function (type) {
     const row = dom.membershipFormRow(null);
     const container = document.getElementById(`membershipFieldset-${type}`);
-    container.insertBefore(row, container.children[2]);
+    container.insertBefore(row, container.children[3]);
+    util.whiteFlash(row.id);
+}
+window.renewMembershipRow = function (type, membership) {
+    const row = dom.createRenewedMembershipRow(membership);
+    const container = document.getElementById(`membershipFieldset-${type}`);
+    container.insertBefore(row, container.children[3]);
     util.whiteFlash(row.id);
 }
 window.adjustPunches = function (inputId, amount) {
@@ -217,6 +267,19 @@ window.adjustPunches = function (inputId, amount) {
 document.querySelectorAll('.only-numbers').forEach(inputElement => {
     inputElement.addEventListener('input', () => {
         inputElement.value = inputElement.value.replace(/\D/g, '');
+    });
+});
+
+document.getElementById("refresh-daily-checkins").addEventListener("click", () => {
+    api.loadDailyCheckins(new Date().toISOString().split('T')[0]);
+});
+
+document.querySelectorAll('input, select').forEach((element) => {
+    element.addEventListener('input', () => {
+        element.classList.remove("missing");
+    });
+    element.addEventListener('change', () => {
+        element.classList.remove("missing");
     });
 });
 
@@ -259,39 +322,38 @@ window.saveEditedMember = async function () {
 
     const rows = Array.from(document.getElementById("editAccount-container").getElementsByClassName("membership-row"));
     for (let row of rows) {
-        console.log("log0");
         let i = parseInt(row.id.split('-')[3]); //Get dom id 
         let suffix = row.id.split('-')[2];
-        console.log(document.getElementById(`membership-type-${suffix}-${i}`));
         let type = document.getElementById(`membership-type-${suffix}-${i}`).value;
         let startDate = document.getElementById(`startDate-${suffix}-${i}`).value;
+        let endDate = document.getElementById(`endDate-${suffix}-${i}`).value;
         let addedDays = document.getElementById(`daysAdded-${suffix}-${i}`);
         let ageGroup = document.getElementById(`ageGroupSelect-${suffix}-${i}`).value;
 
         if (type === '') {
             showTopHeaderDialog('Please select a membership type.', { error: true });
-            util.inputMissing(`membership-type-edit-${i}`);
+            util.inputMissing(`membership-type-${suffix}-${i}`);
             return;
         }
-        if ((type === 'class' || type === 'athletic') && ageGroup === '') {
+        if ((type === 'class' || type === 'athletic') && ageGroup === '' && !util.isExpired(endDate)) {
             showTopHeaderDialog('Age group is required for Classes or Athletic memberships.', { error: true });
-            util.inputMissing(`ageGroupSelect-edit-${i}`);
+            util.inputMissing(`ageGroupSelect-${suffix}-${i}`);
             return;
         }
         if (type === 'open') ageGroup = 'NA';
         if (startDate && isNaN(new Date(startDate).getTime())) {
             showTopHeaderDialog('Invalid Start Date. Use YYYY-MM-DD.', { error: true });
-            util.inputMissing(`startDate-edit-${i}`);
+            util.inputMissing(`startDate-${suffix}-${i}`);
             return;
         }
         if (startDate === '') {
             showTopHeaderDialog('Start date is required for memberships.', { error: true });
-            util.inputMissing(`startDate-edit-${i}`);
+            util.inputMissing(`startDate-${suffix}-${i}`);
             return;
         }
         if ((addedDays.value === '' || parseInt(addedDays.value) <= 0) && addedDays.placeholder !== '∞') {
             showTopHeaderDialog('Day duration is required for memberships.', { error: true });
-            util.inputMissing(`daysAdded-edit-${i}`);
+            util.inputMissing(`daysAdded-${suffix}-${i}`);
             return;
         }
     }
@@ -304,9 +366,10 @@ window.saveEditedMember = async function () {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
         // Step 1: Create Account
-        const userRes = await fetch(`${backendIP}/api/users/editUser`, {
+        const userRes = await fetch(`${global.API_IP}/api/users/editUser`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${global.getToken()}` },
+
             body: JSON.stringify({
                 id: AccountId,
                 name: name,
@@ -359,9 +422,9 @@ window.saveEditedMember = async function () {
                         is_closed: false
                     };
 
-                    const membershipRes = await fetch(`${backendIP}/api/memberships/addMembership`, {
+                    const membershipRes = await fetch(`${global.API_IP}/api/memberships/addMembership`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${global.getToken()}` },
                         body: JSON.stringify(membershipPayload),
                         signal: controller.signal
                     });
@@ -386,9 +449,9 @@ window.saveEditedMember = async function () {
                         is_closed: isClosed
                     };
 
-                    const membershipRes = await fetch(`${backendIP}/api/memberships/editMembership`, {
+                    const membershipRes = await fetch(`${global.API_IP}/api/memberships/editMembership`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${global.getToken()}` },
                         body: JSON.stringify(membershipPayload),
                         signal: controller.signal
                     });
@@ -403,6 +466,7 @@ window.saveEditedMember = async function () {
         clearTimeout(timeout);
         showTopHeaderDialog("Account updated successfully", { success: true, autoClose: true, duration: 3000 });
         global.setSelectedAccountForEdit(null);
+        dom.toggleEditTabButton();
         dom.swapTab(global.tabIndexs.editAccount);
         util.whiteFlash("editAccount-container");
         api.loadSearchTableResults();
@@ -495,9 +559,9 @@ window.addNewMember = async function () {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
         // Step 1: Create Account
-        const userRes = await fetch(`${backendIP}/api/auth/signup`, {
+        const userRes = await fetch(`${global.API_IP}/api/auth/signup`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${global.getToken()}` },
             body: JSON.stringify({
                 name: name,
                 email: email,
@@ -544,9 +608,9 @@ window.addNewMember = async function () {
                     is_paused: isPaused
                 };
 
-                const membershipRes = await fetch(`${backendIP}/api/memberships/addMembership`, {
+                const membershipRes = await fetch(`${global.API_IP}/api/memberships/addMembership`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${global.getToken()}` },
                     body: JSON.stringify(membershipPayload),
                     signal: controller.signal
                 });
@@ -603,8 +667,30 @@ function showTopHeaderDialog(message, options = {}) {
     document.body.appendChild(header);
 }
 
+const hiddenInput = document.getElementById("hiddenDate");
+const dateLabel = document.getElementById("dateLabel");
 
+// Open native date picker when clicking label
+dateLabel.addEventListener("click", () => {
+    hiddenInput.showPicker(); // modern browsers
+});
 
+// Format date to "Aug 22"
+function formatDate(dateStr) {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    // Create a date in local time (not UTC)
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+// Update label when date changes
+hiddenInput.addEventListener("change", () => {
+    if (hiddenInput.value) {
+        dateLabel.textContent = formatDate(hiddenInput.value);
+    }
+    api.loadDailyCheckins(hiddenInput.value);
+});
 
-
-
+// Default to today
+const today = util.getTodayString();
+hiddenInput.value = new Date().toISOString().split('T')[0];
+dateLabel.textContent = formatDate(today);

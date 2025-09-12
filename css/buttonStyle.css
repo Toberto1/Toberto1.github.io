@@ -15,6 +15,11 @@
 
   --button-color-pause: #e26a02;
 
+
+  --button-temp-color: #9bacd0;
+  --button-temp-hover-color: #7587ac;
+  --button-temp-checked-color: #3a4a6d;
+
   font-weight: bold;
 }
 
@@ -44,7 +49,6 @@ input[type="checkbox"] {
     transition: all 0.2s ease;
     user-select: none;
     font-weight: bold;
-    box-shadow: 0 5px 0px rgb(0,0,0,0.1);
 }
 
 /* When the checkbox is checked, target the adjacent label */
@@ -168,12 +172,14 @@ input[type="button"].cancel-btn:not(:disabled):hover  {
 
   box-shadow: 0 5px 0px rgb(0,0,0,0.1);
   transition: background 0.4s ease-in-out, width 0.3s ease;
-
+  height: 35px;
 }
 
 .tab-container label:hover {
   background: var(--button-hover-color);
 }
+
+
 .search-method-container {
   display: flex;
   justify-content: end;
@@ -212,6 +218,24 @@ input[type="radio"]:disabled + label {
   background: rgb(82, 80, 75);
   color: white;
 }
+
+
+.tab-container label.temp-color  {
+  background: var(--button-temp-color);
+  color: white;
+}
+
+.tab-container label.temp-color:hover {
+  background: var(--button-temp-hover-color);
+  color: white;
+}
+
+
+.tab-container input[type="radio"]:checked + label.temp-color  {
+  background: var(--button-temp-checked-color);
+  color: white;
+}
+
 
 input[type="button"].badge-button {
   display: inline-block;

@@ -79,8 +79,43 @@ export function createMembershipFieldset(account) {
     addBtn.id = "addMemberBtn";
     addBtn.addEventListener("click", () => addMembershipRow(setID)); // use setID or whatever context you need
 
+    const renewBtn = document.createElement("input");
+    renewBtn.classList.add("action-btn", "clear-btn", "hidden");
+
+    if (account !== null) {
+        renewBtn.type = "button";
+
+        renewBtn.value = "Renew Expired";
+        renewBtn.style.alignSelf = "start";
+        renewBtn.style.marginLeft = "0.5rem";
+        renewBtn.style.borderRadius = "20px";
+        renewBtn.style.padding = "0.5rem 1rem";
+        renewBtn.style.fontSize = "14px";
+        renewBtn.id = "renewMemberBtn";
+
+        for (const membership of account.memberships) {
+            if (util.isExpired(membership.end_date)) {
+                renewBtn.classList.remove("hidden");
+
+                const membershipCopy = { ...membership };
+
+                // Calculate new end date on the copy
+                membershipCopy.end_date = util.calculateEndDate(util.getTodayString(), membershipCopy.base_length, membershipCopy.total_days_paused);
+                membershipCopy.start_date = util.getTodayString();
+                membershipCopy.renewedCopy = true;
+                renewBtn.addEventListener("click", () => {
+                    renewBtn.classList.add("hidden");
+                    renewMembershipRow(setID, membershipCopy);
+                });
+                break;
+            } else break;
+        }
+    }
+
+
     fieldSet.appendChild(legend);
     fieldSet.appendChild(addBtn);
+    fieldSet.appendChild(renewBtn);
 
     if (account !== null && Array.isArray(account.memberships)) {
         for (const membership of account.memberships) {
@@ -110,12 +145,12 @@ export function createSubmitFieldset(account) {
             addNewMember();
         } else {
             saveEditedMember();
+
         }
     });
 
     fieldSet.appendChild(legend);
     fieldSet.appendChild(addBtn);
-
 
     if (setID === "add") {
         const clearBtn = document.createElement("input");
@@ -136,7 +171,8 @@ export function createSubmitFieldset(account) {
         cancelBtn.value = "Cancel";
         cancelBtn.addEventListener("click", () => {
             global.setSelectedAccountForEdit(null);
-            swapTab(global.tabIndexs.editAccount);
+            toggleEditTabButton();
+            swapTab(global.tabIndexs.search);
             util.whiteFlash("editAccount-container");
         });
         fieldSet.appendChild(cancelBtn);
@@ -256,10 +292,86 @@ export function createEditAccountNavColumn() {
 
 
 
+export function createUpComingClassBadge(classObj) {
+    const badge = document.createElement("div");
+    badge.classList.add("upcoming-class-badge");
+
+
+    const timeDiv = document.createElement("div");
+    timeDiv.classList.add("upcoming-class-time");
+
+    const [hours, minutes, seconds] = classObj.time.split(":");
+    const d = new Date();
+    d.setHours(hours, minutes);
+    timeDiv.textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+    const infoDiv = document.createElement("div");
+    infoDiv.classList.add("upcoming-class-info");
+
+    const nameDiv = document.createElement("div");
+    nameDiv.textContent = classObj.name.toUpperCase();
+    nameDiv.style.fontWeight = "bold";
+    infoDiv.appendChild(nameDiv);
+
+    const ageDiv = document.createElement("div");
+    ageDiv.textContent = classObj.age_group;
+    infoDiv.appendChild(ageDiv);
+
+    badge.appendChild(timeDiv);
+    badge.appendChild(infoDiv);
+
+
+    return badge;
+}
+
+export function createUpComingClassRow(classObjArray) {
+    const row = document.createElement("div");
+    row.classList.add("upcoming-class-row");
+
+    classObjArray.forEach(classObj => {
+        const badge = createUpComingClassBadge(classObj);
+        row.appendChild(badge);
+    });
+
+    return row;
+}
+
+
+export function createRenewedMembershipRow(membership) {
+    // Always create a new "add" row
+    const row = membershipFormRow(null, true);
+
+    if (!membership) return row; // fallback to empty row
+
+    // Fill in the fields manually
+    const typeSelect = row.querySelector(`#membership-type-add-${row.id.split('-')[3]}`);
+    const ageSelect = row.querySelector(`#ageGroupSelect-add-${row.id.split('-')[3]}`);
+    const daysInput = row.querySelector(`#daysAdded-add-${row.id.split('-')[3]}`);
+    const startInput = row.querySelector(`#startDate-add-${row.id.split('-')[3]}`);
+    const endInput = row.querySelector(`#endDate-add-${row.id.split('-')[3]}`);
+
+    // Prefill values from expired membership
+    typeSelect.value = membership.type;
+    typeSelect.classList.add(`${membership.type}-color`);
+    if (["class", "athletic"].includes(membership.type)) ageSelect.disabled = false;
+
+    ageSelect.value = membership.age_group === "NA" ? '' : membership.age_group;
+
+    daysInput.value = membership.is_unlimited ? '' : membership.base_length;
+    daysInput.placeholder = membership.is_unlimited ? '∞' : '';
+
+    // Start today
+    startInput.value = util.getTodayString();
+
+    // Calculate end date based on base_length and total_days_paused
+    endInput.value = util.calculateEndDate(startInput.value, membership.base_length, 0);
+
+    return row;
+}
 
 
 
-export function membershipFormRow(membership) {
+export function membershipFormRow(membership, isRenewed = false) {
 
     const suffix = (membership === null) ? "add" : "edit";
     const membershipId = (membership === null) ? (-1) : membership.id;
@@ -271,8 +383,6 @@ export function membershipFormRow(membership) {
     row.id = `membership-row-${rowID}`;
     row.dataset.membershipId = membershipId;
     row.classList.add(`membership-row`);
-
-
 
     //Top row of widgets
     const topRow = document.createElement("div");
@@ -503,21 +613,18 @@ export function membershipFormRow(membership) {
             }
         });
 
-
         closeWrapper.appendChild(closeCheckbox);
         closeWrapper.appendChild(closeLabel);
         bottomRow.appendChild(closeWrapper);
 
-
-
         selectType.value = membership.type;
         ageSelect.value = membership.age_group === "NA" ? '' : membership.age_group;
-        startInput.value = util.formatPostgresDateForInput(membership.start_date);
+        startInput.value = util.getDateOnly(membership.start_date);
 
         daysInput.value = (membership.is_unlimited) ? '' : membership.base_length;
         daysInput.placeholder = (membership.is_unlimited) ? '∞' : '';
 
-        endInput.value = util.formatPostgresDateForInput(membership.end_date);
+        endInput.value = util.getDateOnly(util.calculateEndDate(membership.start_date, membership.base_length, membership.total_days_paused));
         pauseCheckbox.checked = (membership.is_paused);
 
         selectType.classList.add(`${selectType.value}-color`);
@@ -586,6 +693,9 @@ export function membershipFormRow(membership) {
         deleteButton.onclick = () => {
             util.whiteFlash(row.parentElement.id);
             row.remove();
+            if (isRenewed) {
+                document.getElementById("renewMemberBtn").classList.remove("hidden");
+            }
 
         }
         bottomRow.appendChild(deleteButton);
@@ -599,10 +709,6 @@ export function membershipFormRow(membership) {
 }
 
 
-export function createUpComingClassBadge() {
-
-}
-
 
 
 
@@ -613,15 +719,16 @@ export function createUpComingClassBadge() {
 export function updateMainTitle(tabIndex) {
     const titles = [
         'Search',
-        'Upcoming Check-Ins',
         'Add Account',
         'Edit Account',
+        'Daily Check-Ins',
         'Log History',
+        'Upcoming Check-Ins'
     ];
     mainTitle.innerHTML = String(titles[tabIndex] || '');
 }
 
-export function swapTab(tabIndex) {
+export async function swapTab(tabIndex) {
     const tabContainers = document.querySelectorAll('.tab-content');
     tabContainers.forEach((tab, index) => {
         tab.classList.toggle('active', index === tabIndex);
@@ -652,14 +759,24 @@ export function swapTab(tabIndex) {
             util.whiteFlash("log-container");
             break;
 
-        case global.tabIndexs.upcoming:
-            util.whiteFlash("upcoming-container");
+        case global.tabIndexs.upcomingCheckins:
+            util.whiteFlash("upcomingCheckins-container");
+            break;
+
+        case global.tabIndexs.dailyCheckins:
+            util.whiteFlash("dailyCheckins-container");
             break;
 
     }
 
     updateMainTitle(tabIndex);
 }
+
+function createUpcomingClassList(ageGroup, classArray) {
+
+}
+
+
 
 
 function initEditTab() {
@@ -724,4 +841,16 @@ export function toggleLogFilterRow(force) {
     util.toggleElement("log-filter-row");
     logFilterToggleBtn.value = (document.getElementById("log-filter-row").classList.contains('hidden')) ? "Filter ▼" : "Filter ▲";
 }
+
+export function toggleEditTabButton() {
+    const inputId = "editAccountTabButton";
+    const label = document.querySelector(`label[for="${inputId}"]`);
+    if (global.getselectedAccountForEdit() === null) {
+        label.classList.add("hidden");
+    } else {
+        label.classList.remove("hidden");
+        label.textContent = `Editting: ${global.getselectedAccountForEdit().name}`; // <-- change inner text
+    }
+}
+
 

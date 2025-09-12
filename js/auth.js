@@ -20,7 +20,6 @@ async function submitPassword() {
     });
 
     const data = await res.json();
-
     if (res.ok) {
       // Save the token for later use
       localStorage.setItem('token', data.token);

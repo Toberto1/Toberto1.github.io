@@ -19,11 +19,13 @@
 
     --pause-color: #e27902;
 
+    --button-color: #c7c7c7;
+
 
     font-family: Arial;
     font-size: 12px;
 
-    min-height: 100vh;
+
     overflow-y: scroll;
 }
 
@@ -35,16 +37,20 @@
 
 
 /* Main Structure */
+html {
+    height: 100vh;
+}
 
 body {
     display: flex;
     justify-content: start;
     flex-direction: column;
-    gap: 30px;
+    gap: 50px;
     align-items: center;
 
     height: 100%;
-    margin: 1% 5%;
+    margin: 0 5%;
+    /* full viewport minus top+bottom margin */
 }
 
 input::placeholder {
@@ -54,13 +60,15 @@ input::placeholder {
 }
 
 header {
-    height: 20%;
+    height: 10%;
     width: 100%;
 }
 
 main {
-    height: 70%;
+    height: 80%;
     width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 footer {
@@ -77,14 +85,24 @@ footer {
     gap: 15px;
     width: 100%;
     height: 80%;
+
+    position: relative;
 }
 
 #search-filterButtons {
     width: 100%;
     display: flex;
-    justify-content: start;
+    justify-content: end;
     align-items: center;
     gap: 10px;
+    position: absolute;
+    right: 5px;
+    pointer-events: none;
+}
+
+#search-filterButtons>* {
+    pointer-events: auto;
+    /* this child can receive clicks */
 }
 
 /* Inside Main body */
@@ -94,7 +112,19 @@ footer {
     padding-top: 1em;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     margin-top: 10px;
-    max-height: 460px;
+    max-height: 100%;
+
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+}
+
+#main-container>div {
+    height: 95%;
+}
+
+#main-container>.center {
+    height: 5%;
 }
 
 
@@ -116,6 +146,7 @@ footer {
     border-color: #000000;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
+
 input[type="password"],
 input[type="number"],
 input[type="text"] {
@@ -123,6 +154,7 @@ input[type="text"] {
     padding-left: 5px;
     border: 1px solid #ccc;
 }
+
 input[type="password"]:focus,
 input[type="number"]:focus,
 input[type="text"]:focus {
@@ -135,6 +167,7 @@ input[type="text"]:focus {
 
 /* Show the content of the selected tab */
 .tab-content {
+    border-top: 2px solid #f0f0f0;
     display: none;
 }
 
@@ -182,6 +215,10 @@ input[type="text"]:focus {
     display: grid;
 }
 
+#main-tab-container {
+    height: 6%;
+}
+
 table {
     border-collapse: collapse;
     width: 100%;
@@ -203,13 +240,12 @@ td {
 thead {
     background-color: #f4f4f4;
     font-size: 16px;
-    scrollbar-gutter: stable;
     overflow-y: scroll;
 }
 
 
 tr {
-    width: 90%;
+    width: 100%;
 }
 
 tbody tr:nth-child(even) {
@@ -225,15 +261,42 @@ tbody tr:nth-child(odd) {
 
     overflow-y: overlay;
     padding: 0;
-    max-height: 350px;
+    max-height: 100%;
     scrollbar-gutter: stable;
     scroll-padding: 0;
 
 }
 
+#searchAccount-container {
+    flex-direction: column;
+}
+
+
+
 #searchResultsTable {
     text-align: center;
-    height: 350px;
+}
+
+#searchAccount-container {
+    flex-direction: column;
+}
+
+#searchAccount-container .scrollableTable {
+    flex: 1 1 auto;
+    overflow-y: scroll;
+    min-height: 0;
+    /* allows flex child to shrink correctly */
+}
+
+.custom-select {
+    padding: 0.5em 0;
+    font-size: 1rem;
+
+    border-radius: 6px;
+    border: 2px solid #0000007b;
+    cursor: pointer;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    background-color: var(--button-color);
 }
 
 .badge {
@@ -253,15 +316,16 @@ tbody tr:nth-child(odd) {
 }
 
 .sticker {
-    display: inline-block;
+   
     padding: 0.4em 1px;
-    background: #b1b1b1;
+    background: #b1b1b111;
     color: #000000;
     border-radius: 6px;
 
     border: 2px solid #222;
     text-align: center;
     min-width: 100px;
+    max-width: 100px;
     height: 2.0em;
 }
 
@@ -273,7 +337,7 @@ tbody tr:nth-child(odd) {
     border-radius: 6px;
 
     text-align: left;
-    height: 2.0em;
+    min-height: 2.0em;
 }
 
 .additive-update {
@@ -397,23 +461,26 @@ legend {
 
     height: 400px;
 }
-.accountTabSelector-column {       /* needed for ::before positioning */
+
+.accountTabSelector-column {
+    /* needed for ::before positioning */
     display: flex;
     flex-direction: column;
     gap: 1em;
     flex: 0 0 200px;
-    align-items: left;         /* center buttons horizontally */
+    align-items: left;
+    /* center buttons horizontally */
 }
 
 
 /* Make sure buttons stay above the line */
-.accountTabSelector-column > label {
+.accountTabSelector-column>label {
     z-index: 1;
     width: 90%;
 }
 
-.accountTabSelector-column input[type="radio"]:checked + label {
-  width: 100%;
+.accountTabSelector-column input[type="radio"]:checked+label {
+    width: 100%;
 }
 
 
@@ -505,7 +572,7 @@ input[type="date"] {
 
 #custom-header-dialog {
     position: fixed;
-    top: 10;
+    top: 30px;
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
@@ -537,7 +604,7 @@ input[type="date"] {
     transform: translateX(-50%);
     background-color: #e6e6e6;
     padding: 8px 16px;
-    
+
     /* space inside the box */
     border-radius: 6px;
     /* optional: rounded corners */
@@ -553,21 +620,13 @@ input[type="date"] {
 }
 
 .missing {
-    border: 2px solid #dc3545;
+    border: 2px solid #dc3545 !important;
 }
 
 
 
 
-.custom-select {
-    padding: 0.5em 0;
-    font-size: 1rem;
 
-    border-radius: 6px;
-    border: 2px solid #000000;
-    cursor: pointer;
-    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
 
 .custom-select:disabled {
     border-color: #c5c5c5;
@@ -604,18 +663,18 @@ input[type="date"] {
 
 #log-container {
     width: 100%;
+    flex-direction: column;
 }
 
 .log-list {
     width: 100%;
-    height: 330px;
+    height: 80%;
     overflow-y: scroll;
 }
 
 .log-filter-row {
     position: absolute;
-    /* or fixed, as you prefer */
-    left: 30;
+    top: 10%;
     width: 100%;
     z-index: 1000;
 
@@ -625,12 +684,11 @@ input[type="date"] {
     background-color: #eaeaea;
 
     display: flex;
-    justify-content: start;
+    flex-wrap: wrap;
     gap: 1rem;
     padding-left: 1rem;
     padding-bottom: 20px;
     align-items: start;
-    height: 10;
 
     text-align: center;
 
@@ -639,23 +697,32 @@ input[type="date"] {
 
 
 #log-result-text {
-    padding: 1.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     font-size: 14px;
     font-weight: normal;
+    height: 10%;
+}
+
+#log-container-search-shortcut {
+    cursor: pointer;
+    color: #0066cc;
+    font-weight: bold;
 }
 
 .log-entry {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 10px;
     padding: 0.5em 10px;
     text-align: left;
     border-top: 1px solid #ddd;
     border-bottom: 1px solid #ddd;
     vertical-align: center;
-    align-items: start;
+    align-items: center;
 
     font-size: 14px;
     font-weight: normal;
@@ -665,23 +732,42 @@ input[type="date"] {
     align-items: center;
     display: flex;
     gap: 20px;
-    width: 100%;
+}
+.log-entry-head > :first-child {
+    width: 225px; /* fixed width for all children */
+    flex-shrink: 0; /* prevent shrinking */
+    flex-grow: 0;   /* prevent growing */
 }
 
 .log-entry-subrow {
     align-items: center;
     display: flex;
     gap: 10px;
+    border-left: 2px solid #ddd;
+    padding-left: 10px;
 }
 
-.log-entry-subrow> :nth-child(1) {
-    flex: 0 0 200px;
+
+
+.log-list {
+    height: 85%;
 }
 
-.log-entry-subrow> :nth-child(2) {
-    flex: 0 0 100px;
+#log-filter-btn-row {
+    height: 10%;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
 }
 
+#log-filter-btn-row  input:first-child {
+  margin-right: auto; /* ensures first stays on the left */
+}
+
+#log-filter-btn-row  input:not(:first-child) {
+  margin-right: 8px; /* optional spacing between right-side buttons */
+  align-self: center;
+}
 
 .log-list .log-entry:nth-child(even) {
     background-color: #f9f9f9;
@@ -728,6 +814,178 @@ input[type="date"] {
 
 }
 
+.dailyCheckin-entry {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    flex-wrap: wrap;
+    gap: 16px;
+    max-height: 40px;
+}
+
+.dailyCheckin-entry>* {
+    flex: 0 0 150px;
+    min-width: 150px;
+}
+.dailyCheckin-entry>*:nth-child(3),
+.dailyCheckin-entry>*:nth-child(2) { /* Name */
+    flex: 0 0 200px;
+}
+
+.dailyCheckin-entry>*:nth-child(5) { /* Name */
+    flex: 0 0 0;
+    min-width: 8em !important;
+    text-align: center;
+}
+
+.dailyCheckin-entry:hover {
+    background-color: #f0f0f0;
+}
+
+.dailyCheckin-entry:last-child {
+    border-bottom: none;
+}
+
+.dailyCheckin-list {
+    width: 85%;
+    height: 100%;
+    overflow-y: scroll;
+    border-right: 1px solid #ddd;
+}
+
+.dailyCheckin-list>:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.dailyCheckin-list>:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+
+.date-picker {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+#dateLabel {
+    padding: 1.4em 1.5em;
+    font-weight: bold;
+    background-color: var(--button-color);
+    border: none;
+    border-radius: 6px;
+    margin: 1em 1em;
+    color : #7e7e7e;
+    box-shadow: 0 5px 0px rgb(0,0,0,0.1);
+    transition: background 0.4s ease-in-out, width 0.3s ease;
+    cursor: pointer;
+}
+#dateLabel:hover {
+    background-color: var(--button-hover-color);
+}
+
+#dailyCheckin-container {
+    flex-direction: row;
+    gap: 0;
+}
+
+.clickable {
+    cursor: pointer;
+
+}
+.clickable:hover {
+    text-decoration: underline;
+    background: linear-gradient(to right, #d3f9d8 0%, transparent 100%);
+        /* keeps it tight around the text */
+}
+
+
+.upcoming-class-badge {
+    display: inline-flex;
+    justify-content: center;
+    padding: 0.4em 10px;
+    background: hsl(210, 100%, 62%);
+    
+    color: #ffffff;
+    border-radius: 6px;
+    font-size: 14px;
+    
+
+    text-align: center;
+    min-width: 250px;
+    
+    transition-duration: 0.2s;
+}
+
+.upcoming-class-badge:hover {
+    background-color: #2196f3;
+    cursor: pointer;
+}
+
+
+
+.upcoming-class-time {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    padding-right: 1em;
+
+    border-right: 2px solid transparent;
+    border-image: linear-gradient(to bottom, transparent 20%, rgb(255, 255, 255) 20%, rgb(255, 255, 255) 80%, transparent 80%);
+    border-image-slice: 1;
+}
+
+.upcoming-class-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1em;
+    width: 10em;
+    gap: 0.5em;
+    text-align: left;
+}
+
+#upcomingCheckins-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 1em;
+    padding: 1em 0;
+    max-height: 100%;
+    overflow-y: scroll;
+}
+
+#upcomingCheckinsTable {
+    width: 100%;
+    display: flex;
+    gap: 1em;
+    justify-content: center;
+}
+
+#upcomingCheckinsTable>div {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+
+    border: 1px solid #eee;
+}
+
+.upcoming-class-row {
+    display: flex;
+    gap: 10px;
+}
+
+.divider-row {
+    color:#575757;
+    background-color: #d3d3d3;
+    margin: 1em 0;
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    width: 100%;
+}
+
 /* ================= Responsive Design ================= */
 
 /* Small devices (phones) */
@@ -738,7 +996,9 @@ input[type="date"] {
         font-size: 14px;
     }
 
-    header, main, footer {
+    header,
+    main,
+    footer {
         width: 100%;
         height: auto;
     }
@@ -753,7 +1013,9 @@ input[type="date"] {
         gap: 8px;
     }
 
-    table, th, td {
+    table,
+    th,
+    td {
         font-size: 12px;
         padding: 0.4em;
         word-wrap: break-word;
