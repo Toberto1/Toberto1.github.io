@@ -93,7 +93,7 @@
             <label for="tab3">Log History</label>
 
             <input type="radio" name="tabs" id="tab5">
-            <label for="tab5" class = "hidden">Upcoming Check-ins</label>
+            <label for="tab5" id = "upcomingCheckinsTabButton" class = "temp-color hidden">Upcoming Check-ins</label>
 
             <button id="right-tab-arrow" class="arrow right">&#10095;</button>
         </div>
@@ -112,8 +112,8 @@
                     <colgroup>
                         <col style="width: 15%;">
                         <col style="width: 27%;">
-                        <col style="width: 25%;">
-                        <col style="width: 23%;">
+                        <col style="width: 20%;">
+                        <col style="width: 28%;">
                         <col style="width: 10%;">
                     </colgroup>
                     <thead>
@@ -129,16 +129,7 @@
 
                 <!-- This is the scrollable container -->
                 <div class="scrollableTable" id="searchResultsTableCon">
-                    <table id="searchResultsTable">
-                        <colgroup>
-                            <col style="width: 15%;">
-                            <col style="width: 27%;">
-                            <col style="width: 25%;">
-                            <col style="width: 23%;">
-                            <col style="width: 10%;">
-                        </colgroup>
-                        <tbody id="searchResults"></tbody>
-                    </table>
+                    <div id="searchResults"></div>
                 </div>
             </div>
 
@@ -258,22 +249,15 @@
             </div>
 
             <div id="upcomingCheckins-container" class="tab-content originIsFlex">
-                <div id="upcomingClassRow" class="upcomingClassRow">
-    
-                </div>
+                <div id="upcomingClassRow" class="upcomingClassRow"></div>
 
                 <div class = "divider-row"><h2>Passes</h2></div>
 
-                <div id="upcomingCheckinsList">
-
-                </div>
-
-
-                <div class = "divider-row"><h2>Memberships</h2></div>
+                <div id = "upcomingCheckinsList" class="upcomingCheckinsList"></div>
 
                 <div id="upcomingCheckinsTable">
 
-                    <div id ="upcoming-checkin-kids-list"></div>
+                    <div id ="upcoming-checkin-kids-list" class = "upcomingCheckinsList"></div>
 
                     <div id ="upcoming-checkin-adults-list"></div>
 

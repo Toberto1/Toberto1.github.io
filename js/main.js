@@ -92,7 +92,7 @@ window.addEventListener('DOMContentLoaded', () => {
     //set up log filters
     util.applyPreset('today');
     api.loadLogResults();
-
+    api.loadSearchTableResults();
     api.loadDailyCheckins(new Date().toISOString().split('T')[0]);
 });
 
@@ -209,8 +209,6 @@ searchBar.addEventListener('input', util.debounce(async (e) => {
 
     if (searchTerm.length === 0) {
         resultsBody.innerHTML = '<tr><td colspan="4" class="tooltipText" style="vertical-align: top;">Use the search box at the top to find an account</td></tr>';
-        mainIsLoading = false; // stop animation if input empty
-        return;
     }
     try {
         mainIsLoading = true; // start animation
@@ -694,3 +692,5 @@ hiddenInput.addEventListener("change", () => {
 const today = util.getTodayString();
 hiddenInput.value = new Date().toISOString().split('T')[0];
 dateLabel.textContent = formatDate(today);
+
+//dom.toggleDarkmode(true);

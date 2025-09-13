@@ -739,6 +739,8 @@ export async function swapTab(tabIndex) {
         tab.checked = index === tabIndex;
     });
 
+    document.getElementById("upcomingCheckinsTabButton")?.classList.add("hidden");
+
     //Initiallize tabs
     switch (tabIndex) {
 
@@ -761,6 +763,7 @@ export async function swapTab(tabIndex) {
 
         case global.tabIndexs.upcomingCheckins:
             util.whiteFlash("upcomingCheckins-container");
+            if (window.innerWidth) document.getElementById("upcomingCheckinsTabButton").classList.remove("hidden");
             break;
 
         case global.tabIndexs.dailyCheckins:
@@ -881,3 +884,8 @@ document.getElementById("left-tab-arrow").addEventListener("click", () => {
   swapTab(global.getNextVisibleIndex(current, -1));
   util.whiteFlash("main-tab-container");
 });
+
+export function toggleDarkmode(bool) {
+    if (bool) document.documentElement.classList.add("darkmode");
+    else document.documentElement.classList.remove("darkmode");
+};

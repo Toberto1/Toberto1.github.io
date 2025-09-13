@@ -35,6 +35,8 @@
 }
 
 
+
+
 /* Main Structure */
 html {
     height: 100vh;
@@ -241,12 +243,14 @@ tr {
     width: 100%;
 }
 
-tbody tr:nth-child(even) {
+#searchResults>div:nth-child(even) {
     background-color: #f9f9f9;
+    border-bottom: 1px solid #ddd;
 }
 
-tbody tr:nth-child(odd) {
+#searchResults>div:nth-child(odd) {
     background-color: #ffffff;
+    border-bottom: 1px solid #ddd;
 }
 
 .fixed-header,
@@ -268,6 +272,13 @@ tbody tr:nth-child(odd) {
 
 #searchResultsTable {
     text-align: center;
+}
+
+#searchResults {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    font-weight: normal;
 }
 
 #searchAccount-container {
@@ -776,6 +787,26 @@ input[type="date"] {
     background-color: #ffffff;
 }
 
+.upcomingCheckinsList {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+
+.upcomingCheckinsList>div:nth-child(even) {
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+}
+.upcomingCheckinsList>div:nth-child(odd) {
+    background-color: #ffffff;
+    border-bottom: 1px solid #ddd;
+}
+
+
+
 .filter-group {
     display: flex;
     flex-direction: column;
@@ -901,8 +932,6 @@ input[type="date"] {
 
 .clickable:hover {
     text-decoration: underline;
-    background: linear-gradient(to right, #d3f9d8 0%, transparent 100%);
-    /* keeps it tight around the text */
 }
 
 
@@ -955,8 +984,7 @@ input[type="date"] {
 #upcomingCheckins-container {
     flex-direction: column;
     align-items: center;
-    gap: 1em;
-    padding: 1em 0;
+    justify-content: start;
     max-height: 100%;
     overflow-y: scroll;
 }
@@ -969,7 +997,6 @@ input[type="date"] {
 }
 
 #upcomingCheckinsTable>div {
-    flex: 1;
     min-width: 300px;
     display: flex;
     flex-direction: column;
@@ -985,7 +1012,6 @@ input[type="date"] {
 .divider-row {
     color: #575757;
     background-color: #d3d3d3;
-    margin: 1em 0;
     padding: 8px 12px;
     border-bottom: 1px solid #eee;
     width: 100%;
@@ -1144,6 +1170,23 @@ input[type="button"].edit-button {
     cursor: pointer;
 }
 
+input[type="button"].search-entry-button {
+    display: inline-block;
+    width: 50px;
+    background: var(--button-color);
+    color: black;
+    border-radius: 6px;
+    font-size: 14px;
+    height: 2.0em;
+    text-align: center;
+    
+    transition: background 0.2s ease-in-out;
+    font-weight: bold;
+
+    border: none;
+    cursor: pointer;
+}
+
 input[type="button"].action-btn.action-btn:disabled {
     color: #7e7e7e;
     cursor: not-allowed;
@@ -1203,6 +1246,21 @@ input[type="button"].cancel-btn:not(:disabled):hover {
 .tab-container label:hover {
     background: var(--button-hover-color);
 }
+
+.search-entry {
+    display: flex;
+    align-items: center;
+    padding: 0.5em;
+}
+.search-entry > div {
+    padding: 0 10px;
+}
+
+.search-entry > div:nth-child(1) { width: 15%; }
+.search-entry > div:nth-child(2) { width: 27%; }
+.search-entry > div:nth-child(3) { width: 20%; }
+.search-entry > div:nth-child(4) { width: 28%; }
+.search-entry > div:nth-child(5) { width: 10%; }
 
 
 .search-method-container {
@@ -1368,17 +1426,23 @@ input[type="button"]:not(:disabled):active {
     #search-filterButtons {
         display: none;
         gap: 5px;
-        justify-content: space-evenly;
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
+        gap: 20px;
+        justify-content: center;
         background: #f0f0f0;
-        padding: 10px;
+        padding: 20px 10px;
         border-radius: 8px;
         border: 1px solid #ccc;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         position: absolute;
         top: 50px;
-        right: 0;
-        z-index: 1000;
+        width: 150px;
+        z-index: 10000;
     }
+
+  
 
     #filter-hamburger {
         display: block;
@@ -1425,7 +1489,18 @@ input[type="button"]:not(:disabled):active {
         box-shadow: 0 5px 0px rgb(0, 0, 0, 0.1);
     }
 
+    .search-entry {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    .search-entry>div {
+        width: 100% !important;
+    }
 
+    #table-fixed-header {
+        display: none;
+    }
 
 }
 
@@ -1434,6 +1509,9 @@ input[type="button"]:not(:disabled):active {
 
     /* When the screen is small */
     #filter-hamburger {
+        display: none;
+    }
+    #upcomingCheckinsTabButton {
         display: none;
     }
 
@@ -1446,4 +1524,186 @@ input[type="button"]:not(:disabled):active {
     #filter-hamburger {
         display: none;
     }
+    #upcomingCheckinsTabButton {
+        display: none;
+    }
+}
+
+/* ================= Dark Mode ================= */
+:root.darkmode {
+    /* Core UI colors */
+    --background-color: #121212;
+    --foreground-color: #e0e0e0;
+    --text-color: #e0e0e0;
+
+    --button-color: #2c2c2c;
+    --button-hover-color: #444444;
+    --button-toggle-color: #0dbe00;
+
+    --openGym-color: #4caf50;
+    --classes-color: #2196f3;
+    --athletic-color: #ffb82a;
+    --private-color: #f44336;
+    --aerial-color: #8c52ff;
+
+    --error-color: #ff4c4c;
+    --success-color: #00be5c;
+    --pause-color: #e27902;
+
+    --button-color-cancel: #991010;
+    --button-color-cancel-hover: #e31919;
+    --button-color-pause: #e26a02;
+
+    --button-temp-color: #3a3f55;
+    --button-temp-hover-color: #5a5f7a;
+    --button-temp-checked-color: #1f2438;
+
+    --tab-selected-color: #555555;
+
+    --table-row-even: #1e1e1e;
+    --table-row-odd: #252525;
+
+    --input-background: #1e1e1e;
+    --input-border: #555555;
+    --badge-background: #2c2c2c;
+    --badge-text: #e0e0e0;
+    --sticker-background: #2a2a2a;
+    --sticker-text: #e0e0e0;
+}
+
+/* HTML and body */
+html.darkmode, body.darkmode {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* Header, main, footer */
+body.darkmode header,
+body.darkmode main,
+body.darkmode footer {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* Tables */
+body.darkmode table,
+body.darkmode th,
+body.darkmode td {
+    color: var(--foreground-color);
+    border-color: #444;
+}
+
+body.darkmode tbody tr:nth-child(even) {
+    background-color: var(--table-row-even);
+}
+
+body.darkmode tbody tr:nth-child(odd) {
+    background-color: var(--table-row-odd);
+}
+
+/* Inputs, selects, textareas */
+body.darkmode input,
+body.darkmode textarea,
+body.darkmode select {
+    background-color: var(--input-background);
+    color: var(--text-color);
+    border: 1px solid var(--input-border);
+}
+
+body.darkmode input::placeholder,
+body.darkmode textarea::placeholder {
+    color: #aaa;
+}
+
+/* Buttons */
+body.darkmode input[type="button"],
+body.darkmode .custom-button,
+body.darkmode .checkbox-label,
+body.darkmode .badge-button {
+    background-color: var(--button-color);
+    color: var(--text-color);
+    border-color: #444;
+}
+
+body.darkmode input[type="button"]:hover,
+body.darkmode .custom-button:hover,
+body.darkmode .checkbox-label:hover,
+body.darkmode .badge-button:hover {
+    background-color: var(--button-hover-color);
+}
+
+/* Active tabs */
+body.darkmode .tab-container input[type="radio"]:checked+label {
+    background: var(--tab-selected-color);
+    color: white;
+}
+
+/* Badges and stickers */
+body.darkmode .badge,
+body.darkmode .sticker,
+body.darkmode .membership-badge,
+body.darkmode .oldToNewSticker,
+body.darkmode .additive-update,
+body.darkmode .subtractive-update {
+    background-color: var(--badge-background);
+    color: var(--badge-text);
+    border-color: #555;
+}
+
+/* Fieldsets */
+body.darkmode fieldset {
+    border-color: #555;
+}
+
+body.darkmode fieldset:hover {
+    border-color: #888;
+}
+
+/* Special classes with defined colors */
+body.darkmode .open-color { background-color: var(--openGym-color); color: #fff; }
+body.darkmode .class-color { background-color: var(--classes-color); color: #fff; }
+body.darkmode .athletic-color { background-color: var(--athletic-color); color: #000; }
+body.darkmode .privateadultpasses-color,
+body.darkmode .privatekidpasses-color { background-color: var(--private-color); color: #fff; }
+body.darkmode .aerialsilkspasses-color { background-color: var(--aerial-color); color: #fff; }
+
+body.darkmode .expired-color { background-color: var(--error-color) !important; color: #fff !important; }
+body.darkmode .paused-color { background-color: var(--pause-color); color: #fff; }
+body.darkmode .success-col { background-color: var(--success-color) !important; }
+
+/* Daily Checkins */
+body.darkmode .dailyCheckin-entry:hover {
+    background-color: #2a2a2a;
+}
+
+body.darkmode .dailyCheckin-list>:nth-child(even) {
+    background-color: var(--table-row-even);
+}
+
+body.darkmode .dailyCheckin-list>:nth-child(odd) {
+    background-color: var(--table-row-odd);
+}
+
+/* Date picker label */
+body.darkmode #dateLabel {
+    background-color: var(--button-color);
+    color: var(--text-color);
+}
+
+/* Filter panel */
+body.darkmode #search-filterButtons {
+    background-color: #1e1e1e;
+    border-color: #555;
+    color: var(--text-color);
+}
+
+/* Clickable hover */
+body.darkmode .clickable:hover {
+    background: linear-gradient(to right, #444 0%, transparent 100%);
+}
+
+/* Lottie overlay fadeOut */
+body.darkmode .lottie-overlay.fadeOutAni { 
+    opacity: 0; 
+    pointer-events: none; 
 }

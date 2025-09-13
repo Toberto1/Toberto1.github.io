@@ -275,8 +275,8 @@ export async function loadSearchTableResults() {
     }
     const atLeastOneFilter = (filter.open || filter.class || filter.athletic)
 
-    // const defaultSearchResultTxt = '<tr><td colspan="4" class="tooltipText" style="vertical-align: top;">Use the search box at the top to find an account</td></tr>';
-    resultsBody.innerHTML = '';
+    const defaultSearchResultTxt = '<tr><td colspan="4" class="tooltipText" style="vertical-align: top;">Use the search box at the top to find an account</td></tr>';
+    resultsBody.innerHTML = defaultSearchResultTxt;
 
     if (searchTerm.length === 0 && !atLeastOneFilter) {
 
@@ -311,9 +311,10 @@ export async function loadSearchTableResults() {
 }
 
 function createSearchEntry(account, { disablePassList, disableMembershipList, disableNotes } = {}) {
-    const row = document.createElement('tr');
+    const row = document.createElement('div');
     row.id = `search-entry-${account.id}`;
-    const nameCol = document.createElement('td');
+    row.classList.add("search-entry");
+    const nameCol = document.createElement('div');
     nameCol.classList.add('clickable');
 
     nameCol.textContent = account[global.getSearchMethod()];
@@ -324,22 +325,23 @@ function createSearchEntry(account, { disablePassList, disableMembershipList, di
 
 
 
-    const membershipsCol = document.createElement('td');
+    const membershipsCol = document.createElement('div');
     membershipsCol.appendChild(createMembershipList(account));
 
-    const passesCol = document.createElement('td');
+    const passesCol = document.createElement('div');
     passesCol.appendChild(createPassList(account));
 
-    const notesCol = document.createElement('td');
+    const notesCol = document.createElement('div');
     notesCol.textContent = account.notes;
     notesCol.style.fontStyle = 'italic';
     notesCol.style.color = '#555';
 
-    const editCol = document.createElement('td');
+    const editCol = document.createElement('div');
+    editCol.style.display = "flex";
 
     const editButton = document.createElement('input');
     editButton.type = 'button'; editButton.value = 'Edit';
-    editButton.classList.add('edit-button');
+    editButton.classList.add('search-entry-button');
 
     editButton.addEventListener('click', () => {
         if (editingLockout) return;
@@ -353,7 +355,7 @@ function createSearchEntry(account, { disablePassList, disableMembershipList, di
 
     const logButton = document.createElement('input');
     logButton.type = 'button'; logButton.value = 'Logs';
-    logButton.classList.add('edit-button');
+    logButton.classList.add('search-entry-button');
     logButton.style.marginRight = "5px";
 
     logButton.addEventListener('click', () => {
@@ -882,8 +884,8 @@ async function fetchUpcomingClasses() {
         return date.toTimeString().split(" ")[0];
     };
 
-    const center = now;
-    //const center = new Date(2025, 8, 26, 18, 0, 0);
+   // const center = now;
+    const center = new Date(2025, 8, 26, 18, 0, 0);
 
     // Start = current time - buffer
     const start = new Date(center.getTime() - BUFFER_MINUTES * 60 * 1000);
@@ -893,6 +895,11 @@ async function fetchUpcomingClasses() {
     const start_time = formatTime(start);
     const end_time = formatTime(end);
 
+    const myCallId = util.isLoading("searchAccount-container", true);
+
+   
+        
+    
     const response = await fetch(`${IP}/api/classes/fetchClasses`, {
         method: 'POST',
         headers: {
@@ -900,7 +907,7 @@ async function fetchUpcomingClasses() {
             'Authorization': `Bearer ${global.getToken()}`
         },
         body: JSON.stringify({
-            day: util.getCurrentDayOfTheWeek() + 1,
+            day: 1,
             startTime: start_time,
             endTime: end_time
         })
@@ -912,6 +919,7 @@ async function fetchUpcomingClasses() {
     }
 
     const data = await response.json();
+    util.isLoading("searchAccount-container", false, myCallId);
     return data;
 }
 
@@ -977,9 +985,7 @@ async function createUpcomingMembershipCheckinList(classes) {
 
     const filter = { open: false, class: hasNormal, athletic: hasAthletic };
     const results = await searchAccount("", "name", filter);
-    console.log(results);
     const kidsList = document.getElementById("upcoming-checkin-kids-list");
-    console.log(kidsList);
     const adultsList = document.getElementById("upcoming-checkin-adults-list");
     const teensList = document.getElementById("upcoming-checkin-teens-list");
 
