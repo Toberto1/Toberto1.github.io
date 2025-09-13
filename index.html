@@ -9,8 +9,6 @@
     <link rel="icon" type="image/x-icon" href="favicon.png" sizes="500x500">
 
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/buttonStyle.css">
-    <link rel="stylesheet" href="css/utilStyle.css">
 
     <script src="./js/lottiePlayer.js"></script>
     <script type="module" src="./js/main.js" defer></script>
@@ -27,7 +25,7 @@
         <div id="search-container">
 
             <input type="text" id="searchInput" placeholder="Search by name (Last, First)">
-
+            <button class="action-btn" id="filter-hamburger">&#9776;</button>
             <div id="search-filterButtons">
 
                 <select id="searchMethodSelect" class="custom-select" style="padding: 0.5em;">
@@ -60,10 +58,6 @@
                     <label for="clear-search" class="checkbox-label">Clear</label>
                 </div>
 
-
-
-
-
             </div>
 
         </div>
@@ -73,6 +67,9 @@
 
     <main>
         <div class="tab-container" id="main-tab-container">
+
+            <button id = "left-tab-arrow" class="arrow left">&#10094;</button>
+
             <input type="radio" name="tabs" id="tab1" checked>
             <label for="tab1">Search Users</label>
 
@@ -94,6 +91,11 @@
 
             <input type="radio" name="tabs" id="tab3">
             <label for="tab3">Log History</label>
+
+            <input type="radio" name="tabs" id="tab5">
+            <label for="tab5" class = "hidden">Upcoming Check-ins</label>
+
+            <button id="right-tab-arrow" class="arrow right">&#10095;</button>
         </div>
 
 

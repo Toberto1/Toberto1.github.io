@@ -731,7 +731,10 @@ export async function fetchLogs(startTime, endTime, actionType, limit, accountId
 
 export async function loadDailyCheckins(date) {
 
-    const data = await fetchDailyCheckins(date);
+    const startTime = new Date(`${date}T00:00:00`).toISOString();
+    const endTime = new Date(`${date}T23:59:59.999`).toISOString();
+
+    const data = await fetchDailyCheckins(startTime, endTime);
 
     const container = document.getElementById("dailyCheckin-container");
     container.style.fontSize = "14px";
@@ -1012,15 +1015,14 @@ async function createUpcomingMembershipCheckinList(classes) {
 
 }
 
-async function fetchDailyCheckins(date) {
-    const dateStr = date;
+async function fetchDailyCheckins(startTime, endTime) {
     const response = await fetch(`${IP}/api/logs/fetchDailyCheckins`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${global.getToken()}`
         },
-        body: JSON.stringify({ date: dateStr })
+        body: JSON.stringify({ startTime, endTime })
     });
 
     if (response.status === 401) {

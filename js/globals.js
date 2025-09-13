@@ -51,9 +51,33 @@ export const tabIndexs = {
     upcomingCheckins: 5, //Make sure is always last
 };
 
+export function getTabIndex() {
+  const tabs = Array.from(document.querySelectorAll('input[name="tabs"]'));
+
+  return tabs.findIndex(tab => {
+    const label = document.querySelector(`label[for="${tab.id}"]`);
+    return tab.checked && (!label || !label.classList.contains("hidden"));
+  });
+}
+export function getNextVisibleIndex(current, step) {
+  const tabs = Array.from(document.querySelectorAll('input[name="tabs"]'));
+  let i = current;
+
+  for (let j = 0; j < tabs.length; j++) {   // max N iterations
+    i = (i + step + tabs.length) % tabs.length;
+
+    const label = document.querySelector(`label[for="${tabs[i].id}"]`);
+    if (!label || !label.classList.contains("hidden")) {
+      return i;
+    }
+  }
+
+  return current; // fallback if all are hidden
+}
 export function getToken() {
     return localStorage.getItem('token');
 }
+
 
 
 let searchMethod = "name";

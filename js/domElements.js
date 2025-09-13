@@ -854,3 +854,30 @@ export function toggleEditTabButton() {
 }
 
 
+/* Responsive design adjustments */
+
+document.getElementById("filter-hamburger").addEventListener("click", () => {
+    document.getElementById("search-filterButtons").style.display = (document.getElementById("search-filterButtons").style.display === "flex") ? "none" : "flex";
+    util.whiteFlash("search-filterButtons");
+
+    const hamburgerButton = document.getElementById("filter-hamburger");
+    if (document.getElementById("search-filterButtons").style.display !== "none") {
+        hamburgerButton.style.background = "#222";
+        hamburgerButton.style.color = "white";
+    } else {
+        hamburgerButton.style.background = "";
+        hamburgerButton.style.color = "";
+    }
+});
+
+document.getElementById("right-tab-arrow").addEventListener("click", () => {
+  const current = global.getTabIndex();
+  swapTab(global.getNextVisibleIndex(current, +1));
+  util.whiteFlash("main-tab-container");
+});
+
+document.getElementById("left-tab-arrow").addEventListener("click", () => {
+  const current = global.getTabIndex();
+  swapTab(global.getNextVisibleIndex(current, -1));
+  util.whiteFlash("main-tab-container");
+});
