@@ -275,133 +275,229 @@ export async function loadSearchTableResults() {
     }
     const atLeastOneFilter = (filter.open || filter.class || filter.athletic)
 
-    const defaultSearchResultTxt = '<tr><td colspan="4" class="tooltipText" style="vertical-align: top;">Use the search box at the top to find an account</td></tr>';
-    resultsBody.innerHTML = defaultSearchResultTxt;
-
-    if (searchTerm.length === 0 && !atLeastOneFilter) {
-
-        const row = document.getElementById("upcomingClassRow");
-        row.innerHTML = '';
+    if (searchTerm.length === 0 && !atLeastOneFilter) { //Load upcoming checkin content
 
         const classes = await fetchUpcomingClasses();
-        const classRow = await loadClasses(classes.classes);
-
-        row.appendChild(classRow);
-
+        await loadClasses(classes.classes);
         await createUpcomingPassCheckinList();
         await createUpcomingMembershipCheckinList(classes.classes);
 
+        document.getElementById("search-content").classList.add("hidden");
+        document.getElementById("upcomingCheckins-content").classList.remove("hidden");
+        dom.updateMainTitle("Upcoming Check-ins", { custom: true });
 
-        dom.swapTab(global.tabIndexs.upcomingCheckins);
-        return;
+    } else {
+
+        const results = await searchAccount(searchTerm, searchMethod, filter);
+
+        if (results && results.length > 0) {
+            resultsBody.innerHTML = '';
+            results.forEach(account => {
+                resultsBody.appendChild(createSearchEntry(account));
+            });
+
+        } else resultsBody.innerHTML = '<div class="no-results">No Results Found</div>';
+
+        document.getElementById("search-content").classList.remove("hidden");
+        document.getElementById("upcomingCheckins-content").classList.add("hidden");
+
+
     }
-
-    document.getElementById("table-fixed-header").classList.remove("hidden");
-
-    const results = await searchAccount(searchTerm, searchMethod, filter);
-
-    if (results && results.length > 0) {
-        resultsBody.innerHTML = '';
-        results.forEach(account => {
-            resultsBody.appendChild(createSearchEntry(account));
-        });
-
-    } else resultsBody.innerHTML = '<tr><td colspan="4" class="tooltipText" style="vertical-align: top;">No Results Found</td></tr>';
 
 }
 
-function createSearchEntry(account, { disablePassList, disableMembershipList, disableNotes } = {}) {
+function createSearchEntry(account, { disablePassList, disableMembershipList, disableNotes, hideButtons } = {}) {
     const row = document.createElement('div');
     row.id = `search-entry-${account.id}`;
     row.classList.add("search-entry");
+
+    // === Name Column ===
     const nameCol = document.createElement('div');
     nameCol.classList.add('clickable');
-
     nameCol.textContent = account[global.getSearchMethod()];
-    nameCol.addEventListener('click', () => {
+    nameCol.addEventListener('click', (e) => {
         util.copyToClipboard(account[global.getSearchMethod()]);
-        util.showTopHeaderDialog(`Copied to clipboard: ${account[global.getSearchMethod()]}`, { success: true, autoClose: true, duration: 2000 });
+        util.showTopHeaderDialog(
+            `Copied to clipboard: ${account[global.getSearchMethod()]}`,
+            { success: true, autoClose: true, duration: 2000 }
+        );
     });
 
-
-
+    // === Memberships Column ===
     const membershipsCol = document.createElement('div');
     membershipsCol.appendChild(createMembershipList(account));
 
+    // === Passes Column ===
     const passesCol = document.createElement('div');
     passesCol.appendChild(createPassList(account));
 
+    // === Notes Column ===
     const notesCol = document.createElement('div');
-    notesCol.textContent = account.notes;
+    notesCol.textContent = account.notes || '';
     notesCol.style.fontStyle = 'italic';
     notesCol.style.color = '#555';
 
+    // === Inline Buttons Column (used only when hideButtons is false) ===
     const editCol = document.createElement('div');
     editCol.style.display = "flex";
 
-    const editButton = document.createElement('input');
-    editButton.type = 'button'; editButton.value = 'Edit';
-    editButton.classList.add('search-entry-button');
-
-    editButton.addEventListener('click', () => {
-        if (editingLockout) return;
-        // Handle edit action
+    // named action functions so we can re-use them for popup buttons
+    function doEdit(e) {
+        if (e) e.stopPropagation();
+        if (typeof editingLockout !== 'undefined' && editingLockout) return;
         global.setSelectedAccountForEdit(account);
         dom.toggleEditTabButton();
         dom.swapTab(global.tabIndexs.editAccount);
         util.whiteFlash("editAccount-container");
         util.whiteFlash("editAccountTabLabel");
-    });
+    }
 
-    const logButton = document.createElement('input');
-    logButton.type = 'button'; logButton.value = 'Logs';
-    logButton.classList.add('search-entry-button');
-    logButton.style.marginRight = "5px";
-
-    logButton.addEventListener('click', () => {
-        if (editingLockout) return;
+    function doLogs(e) {
+        if (e) e.stopPropagation();
+        if (typeof editingLockout !== 'undefined' && editingLockout) return;
         global.setSelectedAccountForLog(account);
         util.applyPreset('alltime');
         dom.swapTab(global.tabIndexs.logHistory);
 
         const logContainer = document.getElementById("log-container");
         const oldShortcut = logContainer.querySelector(".edit-shortcut");
-        if (oldShortcut) {
-            oldShortcut.remove();
-        }
+        if (oldShortcut) oldShortcut.remove();
 
-        const clonedEditButton = editButton.cloneNode(true);
-        clonedEditButton.value = `Edit ${account.name}`;
+        const clonedEditButton = document.createElement('input');
+        clonedEditButton.type = 'button';
+        clonedEditButton.value = `Edit ${account.name || account[global.getSearchMethod()]}`;
         clonedEditButton.id = `log-container-edit-shortcut`;
-        clonedEditButton.classList.add('clear-btn', 'edit-shortcut');
-        clonedEditButton.addEventListener('click', () => {
-            // Handle edit action
-            global.setSelectedAccountForEdit(account);
-            dom.toggleEditTabButton();
-            dom.swapTab(global.tabIndexs.editAccount);
-            util.whiteFlash("editAccount-container");
-            util.whiteFlash("editAccountTabLabel");
-        });
-        document.getElementById("log-filter-btn-row").appendChild(clonedEditButton);
-        document.getElementById("clearAccountFilterBtn").classList.remove("hidden");
+        clonedEditButton.classList.add('clear-btn', 'action-btn', 'edit-shortcut');
+        clonedEditButton.addEventListener('click', doEdit);
 
-        util.toggleElement("selectedAccountInfoButton");
+        const rowBtnRow = document.getElementById("log-filter-btn-row");
+        if (rowBtnRow) rowBtnRow.appendChild(clonedEditButton);
+        const clearFilterBtn = document.getElementById("clearAccountFilterBtn");
+        if (clearFilterBtn) clearFilterBtn.classList.remove("hidden");
 
-        loadLogResults();
+        if (typeof util.toggleElement === 'function') util.toggleElement("selectedAccountInfoButton");
+        if (typeof loadLogResults === 'function') loadLogResults();
         util.whiteFlash("log-container");
-    });
+    }
 
-    editCol.appendChild(logButton);
-    editCol.appendChild(editButton);
+    // create inline inputs and attach the named handlers
+    const editButton = document.createElement('input');
+    editButton.type = 'button';
+    editButton.value = 'Edit';
+    editButton.classList.add('search-entry-button');
+    editButton.addEventListener('click', doEdit);
 
+    const logButton = document.createElement('input');
+    logButton.type = 'button';
+    logButton.value = 'Logs';
+    logButton.classList.add('search-entry-button');
+    logButton.style.marginRight = "5px";
+    logButton.addEventListener('click', doLogs);
+
+    // Append inline buttons only when hideButtons is false
+    if (!hideButtons) {
+        editCol.appendChild(logButton);
+        editCol.appendChild(editButton);
+    } else {
+        // Make row clickable to open popup; ignore clicks on interactive elements
+        row.classList.add("popup-row");
+        let popupTimer;
+
+        row.addEventListener("mouseover", (e) => {
+            // ignore if hovered on interactive element
+            if (e.target.closest('input,button,a,select')) return;
+
+            // start timer for popup
+            popupTimer = setTimeout(() => {
+                // Close any existing popups
+                document.querySelectorAll('.search-entry-popup').forEach(p => p.remove());
+
+                // Create popup
+                const popup = document.createElement("div");
+                popup.id = `search-entry-popup-${account.id}`;
+                popup.classList.add("search-entry-popup");
+                Object.assign(popup.style, {
+                    position: "absolute",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    boxShadow: "0 6px 18px rgba(0,0,0,0.22)",
+                    border: "1px solid #aaa",
+                    background: "#ddd",
+                    zIndex: 2000,
+                    display: "flex",
+                    gap: "8px",
+                });
+
+                // Buttons
+                const popupLogBtn = document.createElement('input');
+                popupLogBtn.type = 'button';
+                popupLogBtn.value = 'Logs';
+                popupLogBtn.classList.add('search-entry-button');
+                popupLogBtn.addEventListener('click', (ev) => { ev.stopPropagation(); doLogs(); removePopup(); });
+
+                const popupEditBtn = document.createElement('input');
+                popupEditBtn.type = 'button';
+                popupEditBtn.value = 'Edit';
+                popupEditBtn.classList.add('search-entry-button');
+                popupEditBtn.addEventListener('click', (ev) => { ev.stopPropagation(); doEdit(); removePopup(); });
+
+                popup.appendChild(popupLogBtn);
+                popup.appendChild(popupEditBtn);
+                document.body.appendChild(popup);
+
+                // Position popup
+                const rect = row.getBoundingClientRect();
+                const left = Math.max(8, rect.left + window.scrollX);
+                let top = rect.bottom + window.scrollY;
+                const popupRect = popup.getBoundingClientRect();
+                if ((top + popupRect.height) > (window.scrollY + window.innerHeight)) {
+                    top = rect.top + window.scrollY - popupRect.height - 6;
+                }
+                popup.style.left = `${left}px`;
+                popup.style.top = `${top}px`;
+
+                // cleanup helpers
+                function removePopup() {
+                    if (popup && popup.parentNode) popup.parentNode.removeChild(popup);
+                    document.removeEventListener('click', onDocClick);
+                    window.removeEventListener('resize', removePopup);
+                    window.removeEventListener('scroll', removePopup, true);
+                    document.removeEventListener('keydown', onKeyDown);
+                }
+
+                function onDocClick(evt) {
+                    if (!popup.contains(evt.target)) removePopup();
+                }
+                function onKeyDown(evt) {
+                    if (evt.key === 'Escape') removePopup();
+                }
+
+                setTimeout(() => document.addEventListener('click', onDocClick));
+                window.addEventListener('resize', removePopup);
+                window.addEventListener('scroll', removePopup, true);
+                document.addEventListener('keydown', onKeyDown);
+
+            }, 500); // 300ms buffer
+        });
+
+        // Cancel popup if mouse leaves before timer
+        row.addEventListener("mouseleave", () => {
+            clearTimeout(popupTimer);
+        });
+
+    }
+
+    // === Append columns in original order ===
     row.appendChild(nameCol);
     if (!disableMembershipList) row.appendChild(membershipsCol);
     if (!disablePassList) row.appendChild(passesCol);
     if (!disableNotes) row.appendChild(notesCol);
-    row.appendChild(editCol);
+    if (!hideButtons) row.appendChild(editCol);
 
     return row;
 }
+
+
 
 export async function loadLogResults() {
     util.whiteFlash("log-container");
@@ -597,13 +693,13 @@ export async function loadLogResults() {
                     default:
                         if (log.old_value !== null && log.new_value !== null) {
                             changeDiv.textContent = `${log.old_value} → ${log.new_value}`;
-                            
+
                         }
                         if (log.old_value === null && log.new_value !== null) changeDiv.textContent = `${log.new_value}`;
                 }
-                
 
-               
+
+
 
                 const fieldDiv = document.createElement('label');
                 fieldDiv.style.width = "10%";
@@ -884,8 +980,8 @@ async function fetchUpcomingClasses() {
         return date.toTimeString().split(" ")[0];
     };
 
-   // const center = now;
-    const center = new Date(2025, 8, 26, 18, 0, 0);
+    const center = new Date();
+    //const center = new Date(2025, 8, 26, 18, 0, 0);
 
     // Start = current time - buffer
     const start = new Date(center.getTime() - BUFFER_MINUTES * 60 * 1000);
@@ -895,11 +991,6 @@ async function fetchUpcomingClasses() {
     const start_time = formatTime(start);
     const end_time = formatTime(end);
 
-    const myCallId = util.isLoading("searchAccount-container", true);
-
-   
-        
-    
     const response = await fetch(`${IP}/api/classes/fetchClasses`, {
         method: 'POST',
         headers: {
@@ -919,12 +1010,13 @@ async function fetchUpcomingClasses() {
     }
 
     const data = await response.json();
-    util.isLoading("searchAccount-container", false, myCallId);
     return data;
 }
 
 export async function loadClasses(classArray) {
-    return dom.createUpComingClassRow(classArray);
+    const row = document.getElementById("upcomingClassRow");
+    row.innerHTML = '';
+    row.appendChild(dom.createUpComingClassRow(classArray));
 }
 
 async function fetchUpcomingCheckins(day, startTime, endTime) {
@@ -959,15 +1051,20 @@ async function createUpcomingPassCheckinList() {
     const formatTime = (date) => date.toISOString().split("T")[1];
 
     const checkins = await fetchUpcomingCheckins(util.getCurrentDayOfTheWeekUTC(), formatTime(start), formatTime(end));
+
     checkins.forEach(checkin => {
         const entry = createSearchEntry(checkin);
         container.appendChild(entry);
     });
+
+    if (checkins.length === 0)
+        container.innerHTML = '<div class="no-results">No upcoming check-ins for passes</div>';
+
+
 }
 
 async function createUpcomingMembershipCheckinList(classes) {
     const container = document.getElementById("upcomingCheckinsTable");
-    console.log(container);
     // container.innerHTML = '';
 
     let hasAthletic = false;
@@ -978,20 +1075,36 @@ async function createUpcomingMembershipCheckinList(classes) {
         else hasNormal = true;
     }
 
+    const kidsList = document.getElementById("upcoming-checkin-kids-list");
+    const adultsList = document.getElementById("upcoming-checkin-adults-list");
+    const teensList = document.getElementById("upcoming-checkin-teens-list");
+
     if (!hasAthletic && !hasNormal) {
-        container.innerHTML = '<div style="padding: 1.5em; font-size: 14px;">No upcoming check-ins for memberships</div>';
+        const noClassesMessage = document.createElement("div");
+        noClassesMessage.classList.add("no-results");
+        noClassesMessage.textContent = "No eligible members for upcoming classes.";
+        noClassesMessage.style.border = "none";
+
+        if (container.lastChild && container.lastChild.classList && container.lastChild.classList.contains("no-results")) {
+            // already showing message
+            return;
+        }
+        container.appendChild(noClassesMessage);
+        kidsList.classList.add("hidden");
+        adultsList.classList.add("hidden");
+        teensList.classList.add("hidden");
         return;
     }
 
     const filter = { open: false, class: hasNormal, athletic: hasAthletic };
     const results = await searchAccount("", "name", filter);
-    const kidsList = document.getElementById("upcoming-checkin-kids-list");
-    const adultsList = document.getElementById("upcoming-checkin-adults-list");
-    const teensList = document.getElementById("upcoming-checkin-teens-list");
 
-    kidsList.innerHTML = '<h3 style="margin-bottom: 0.5em; text-align: center;">Kids</h3>';
-    adultsList.innerHTML = '<h3 style="margin-bottom: 0.5em; text-align: center;">Adults</h3>';
-    teensList.innerHTML = '<h3 style="margin-bottom: 0.5em; text-align: center;">Teens</h3>';
+
+
+
+    kidsList.innerHTML = '<h3>Kids</h3>';
+    adultsList.innerHTML = '<h3>Adults</h3>';
+    teensList.innerHTML = '<h3>Teens</h3>';
 
     if (results && results.length > 0) {
 
@@ -1002,16 +1115,14 @@ async function createUpcomingMembershipCheckinList(classes) {
                 if (util.isExpired(membership.end_date)) continue;
 
                 if (membership.age_group === "kid") {
-                    kidsList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true }));
-                    console.log(account);
-
+                    kidsList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true, hideButtons: true }));
                 }
                 else if (membership.age_group === "adult") {
-                    adultsList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true }));
+                    adultsList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true, hideButtons: true }));
 
                 }
                 else if (membership.age_group === "teen") {
-                    teensList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true }));
+                    teensList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true, hideButtons: true }));
 
                 }
             }

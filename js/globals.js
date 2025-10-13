@@ -42,13 +42,21 @@ export function getselectedAccountForLog() {
     return selectedAccountForLog;
 }
 
+let showUpcomingCheckins = true;
+export function setShowUpcomingCheckins(value) {
+    showUpcomingCheckins = value;
+}
+export function getShowUpcomingCheckins() {
+    return showUpcomingCheckins;
+}
+
 export const tabIndexs = {
     search: 0,
     addAccount: 1,
     editAccount: 2,
     dailyCheckins: 3,
     logHistory: 4,
-    upcomingCheckins: 5, //Make sure is always last
+    settings: 5,
 };
 
 export function getTabIndex() {

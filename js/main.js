@@ -50,8 +50,6 @@ setInterval(checkVersion, 15 * 60 * 1000);
 // Also check immediately on page load
 checkVersion();
 
-
-
 //Get DOM elements
 
 const searchBar = document.getElementById('searchInput');
@@ -60,13 +58,6 @@ const resultsBody = document.getElementById('searchResults');
 const addAccountContainer = document.getElementById("addAccount-container");
 
 const filterRow = document.querySelectorAll(".filter-checkbox");
-
-//Initialize functionality varaibles
-let tabOpen = 0;
-let mainIsLoading = false;
-
-const defaultSearchResultTxt = '<tr><td colspan="4" class="tooltipText" style="vertical-align: top;">Use the search box at the top to find an account</td></tr>';
-resultsBody.innerHTML = defaultSearchResultTxt;
 
 //Set up page
 
@@ -137,7 +128,6 @@ document.getElementById("clearAccountFilterBtn").addEventListener("click", () =>
 document.querySelectorAll('input[name="tabs"]').forEach((radio, index) => {
     radio.addEventListener('change', () => {
         dom.swapTab(index);
-        mainIsLoading = false; // Reset loading state
     });
 });
 
@@ -207,19 +197,13 @@ logFilterToggleBtn.addEventListener("click", dom.toggleLogFilterRow);
 searchBar.addEventListener('input', util.debounce(async (e) => {
     const searchTerm = e.target.value.trim();
 
-    if (searchTerm.length === 0) {
-        resultsBody.innerHTML = '<tr><td colspan="4" class="tooltipText" style="vertical-align: top;">Use the search box at the top to find an account</td></tr>';
-    }
     try {
-        mainIsLoading = true; // start animation
         api.loadSearchTableResults();
     } catch (error) {
         console.error('Error fetching search results:', error);
         resultsBody.innerHTML = resultsBody.innerHTML = '<tr><td colspan="4" class="tooltipText" style="vertical-align: top;">Something went wrong</td></tr>';
 
-    } finally {
-        mainIsLoading = false;
-    }
+    } 
 }, 300)); // debounce delay of 300ms
 
 
@@ -665,13 +649,7 @@ function showTopHeaderDialog(message, options = {}) {
     document.body.appendChild(header);
 }
 
-const hiddenInput = document.getElementById("hiddenDate");
-const dateLabel = document.getElementById("dateLabel");
-
-// Open native date picker when clicking label
-dateLabel.addEventListener("click", () => {
-    hiddenInput.showPicker(); // modern browsers
-});
+const dailyCheckinDate = document.getElementById("dailyCheckinDate");
 
 // Format date to "Aug 22"
 function formatDate(dateStr) {
@@ -681,16 +659,15 @@ function formatDate(dateStr) {
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 // Update label when date changes
-hiddenInput.addEventListener("change", () => {
-    if (hiddenInput.value) {
-        dateLabel.textContent = formatDate(hiddenInput.value);
+dailyCheckinDate.addEventListener("change", () => {
+    if (dailyCheckinDate.value) {
+        dateLabel.textContent = formatDate(dailyCheckinDate.value);
     }
-    api.loadDailyCheckins(hiddenInput.value);
+    api.loadDailyCheckins(dailyCheckinDate.value);
 });
 
 // Default to today
 const today = util.getTodayString();
-hiddenInput.value = new Date().toISOString().split('T')[0];
-dateLabel.textContent = formatDate(today);
+dailyCheckinDate.value = new Date().toISOString().split('T')[0];
 
 //dom.toggleDarkmode(true);

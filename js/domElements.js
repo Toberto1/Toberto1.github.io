@@ -145,7 +145,6 @@ export function createSubmitFieldset(account) {
             addNewMember();
         } else {
             saveEditedMember();
-
         }
     });
 
@@ -296,6 +295,9 @@ export function createUpComingClassBadge(classObj) {
     const badge = document.createElement("div");
     badge.classList.add("upcoming-class-badge");
 
+    console.log("obj: ", classObj);
+    const color = getClassColor(classObj.id);
+    badge.style.backgroundColor = color;
 
     const timeDiv = document.createElement("div");
     timeDiv.classList.add("upcoming-class-time");
@@ -332,6 +334,13 @@ export function createUpComingClassRow(classObjArray) {
         const badge = createUpComingClassBadge(classObj);
         row.appendChild(badge);
     });
+
+    if (classObjArray.length === 0) {
+        const noClassesMessage = document.createElement("div");
+        noClassesMessage.classList.add("no-results");
+        noClassesMessage.textContent = "No classes scheduled at this time.";
+        row.appendChild(noClassesMessage);
+    }
 
     return row;
 }
@@ -459,6 +468,9 @@ export function membershipFormRow(membership, isRenewed = false) {
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString().split('T')[0];
         startInput.value = today;
+        if (daysInput.value === '') endInput.value = '';
+        else endInput.value = util.calculateEndDate(startInput.value, parseInt(daysInput.value), totalDaysPaused);
+
     });
     topRow.appendChild(startDateTodayBtn);
 
@@ -653,7 +665,6 @@ export function membershipFormRow(membership, isRenewed = false) {
             bottomRow.appendChild(daysLeftTxt);
         }
 
-
         if (pauseCheckbox.checked) pauseLabel.textContent = "Resume";
 
         if (pauseCheckbox.checked) {
@@ -684,7 +695,6 @@ export function membershipFormRow(membership, isRenewed = false) {
 
     } else {
 
-
         // --- Delete Button ---
         const deleteButton = document.createElement("input");
         deleteButton.type = "button";
@@ -708,24 +718,20 @@ export function membershipFormRow(membership, isRenewed = false) {
     return row;
 }
 
-
-
-
-
-
-
-
-
-export function updateMainTitle(tabIndex) {
+export function updateMainTitle(tabIndex, options = {}) {
     const titles = [
         'Search',
         'Add Account',
         'Edit Account',
         'Daily Check-Ins',
         'Log History',
-        'Upcoming Check-Ins'
+        'Settings'
     ];
-    mainTitle.innerHTML = String(titles[tabIndex] || '');
+    if (options.custom) {
+        mainTitle.innerHTML = tabIndex;
+    } else {
+        mainTitle.innerHTML = String(titles[tabIndex] || '');
+    }
 }
 
 export async function swapTab(tabIndex) {
@@ -759,11 +765,6 @@ export async function swapTab(tabIndex) {
 
         case global.tabIndexs.logHistory:
             util.whiteFlash("log-container");
-            break;
-
-        case global.tabIndexs.upcomingCheckins:
-            util.whiteFlash("upcomingCheckins-container");
-            if (window.innerWidth) document.getElementById("upcomingCheckinsTabButton").classList.remove("hidden");
             break;
 
         case global.tabIndexs.dailyCheckins:
@@ -815,7 +816,6 @@ function initEditTab() {
     }
 }
 
-
 export function toggleLogFilterRow(force) {
     const logFilterToggleBtn = document.getElementById("filter-log-toggle-btn");
     util.whiteFlash("log-filter-row");
@@ -856,6 +856,10 @@ export function toggleEditTabButton() {
     }
 }
 
+export function getClassColor(index) {
+    const colors = ["#f9c74f", "#77b845ff", "#f3722c", "#f9844a", "#577590", "#43aa8b", "#277da1"];
+    return colors[index % colors.length];
+}
 
 /* Responsive design adjustments */
 

@@ -5,7 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
     <title>Membership Management</title>
+
     <link rel="icon" type="image/x-icon" href="favicon.png" sizes="500x500">
 
     <link rel="stylesheet" href="css/style.css">
@@ -61,14 +63,12 @@
             </div>
 
         </div>
-
-        <div id="nav-row"></div>
     </header>
 
     <main>
         <div class="tab-container" id="main-tab-container">
 
-            <button id = "left-tab-arrow" class="arrow left">&#10094;</button>
+            <button id="left-tab-arrow" class="arrow left">&#10094;</button>
 
             <input type="radio" name="tabs" id="tab1" checked>
             <label for="tab1">Search Users</label>
@@ -92,8 +92,19 @@
             <input type="radio" name="tabs" id="tab3">
             <label for="tab3">Log History</label>
 
-            <input type="radio" name="tabs" id="tab5">
-            <label for="tab5" id = "upcomingCheckinsTabButton" class = "temp-color hidden">Upcoming Check-ins</label>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+
+            <!-- <input type="radio" name="tabs" id="tab7">
+            <label for="tab7">Square</label> -->
+
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+            <div class="spacer"></div>
+
+            <!-- <input type="radio" name="tabs" id="tab6">
+            <label for="tab6">Settings</label> -->
 
             <button id="right-tab-arrow" class="arrow right">&#10095;</button>
         </div>
@@ -102,35 +113,48 @@
 
         <div id="main-container">
 
-            <div class="center" style="padding-bottom: 0.5em;">
+            <div id="tab-title-row" class="center" style="padding-bottom: 0.5em;">
                 <h2 id="main-title">Title</h2>
             </div>
 
+
+
             <div id="searchAccount-container" class="tab-content originIsFlex">
+                <div id="search-content">
+                    <div id="search-results-header">
+                        <div id="searchMethodTableHead">Name</div>
+                        <div>Memberships</div>
+                        <div>Passes</div>
+                        <div>Notes</div>
+                        <div></div>
+                    </div>
 
-                <table id="table-fixed-header">
-                    <colgroup>
-                        <col style="width: 15%;">
-                        <col style="width: 27%;">
-                        <col style="width: 20%;">
-                        <col style="width: 28%;">
-                        <col style="width: 10%;">
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th id="searchMethodTableHead">Name</th>
-                            <th>Memberships</th>
-                            <th>Passes</th>
-                            <th>Notes</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                </table>
+                    <!-- This is the scrollable container -->
+                    <div class="scrollableTable" id="searchResultsTableCon">
+                        <div id="searchResults"></div>
+                    </div>
 
-                <!-- This is the scrollable container -->
-                <div class="scrollableTable" id="searchResultsTableCon">
-                    <div id="searchResults"></div>
                 </div>
+
+                <div id="upcomingCheckins-content" class="hidden">
+                    <div id="upcomingClassRow" class="upcomingClassRow"></div>
+
+                    <div class="divider-row" style="display: flex;">
+                        <h2>Name</h2>
+                        <h2>Available Memberships & Passes</h2>
+                    </div>
+
+                    <div id="upcomingCheckinsList" class="upcomingCheckinsList"></div>
+
+                    <div id="upcomingCheckinsTable">
+                        <div id="upcoming-checkin-kids-list" class="upcomingCheckinsList"></div>
+                        <div id="upcoming-checkin-adults-list" class="upcomingCheckinsList"></div>
+                        <div id="upcoming-checkin-teens-list" class="upcomingCheckinsList"></div>
+                    </div>
+                </div>
+
+
+
             </div>
 
 
@@ -178,21 +202,17 @@
             </div>
 
             <div id="dailyCheckin-container" class="tab-content originIsFlex">
-                <div id = "dailyCheckin-list" class = "dailyCheckin-list"> </div>
-                <div class="date-picker">
+                <div id="dailyCheckin-list" class="dailyCheckin-list"> </div>
+                <div class="dailyCheckin-sidebar">
 
                     <div id="dailyCheckin-info"></div>
                     <!-- Hidden but functional input -->
-                    <input type="date" id="hiddenDate" style="">
+                    <input type="date" id="dailyCheckinDate">
 
-                    <!-- Custom label -->
-                    <button id="dateLabel" type="button">Select Date</button>
-
-                    <input type = "button" class = "action-btn clear-btn" value = "Refresh" id = "refresh-daily-checkins">
+                    <input type="button" class="action-btn clear-btn" value="Refresh" id="refresh-daily-checkins">
 
                 </div>
 
-                
             </div>
 
             <div id="log-container" class="tab-content originIsFlex">
@@ -216,8 +236,6 @@
                         <input type="date" id="log-end-date">
                     </div>
 
-            
-
                     <div class="filter-group preset-buttons">
                         <label>Presets</label>
                         <input type="button" class="action-btn" value="Today" onclick="applyPreset('today')">
@@ -234,7 +252,7 @@
                         <input type="number" id="log-row-limit" class="only-numbers" max="100" value="100">
                     </div>
                     <div class="filter-group preset-buttons">
-                        
+
                     </div>
 
                     <div class="filter-group" id="selectedAccountInfo-container">
@@ -248,23 +266,8 @@
                 <div class="log-list" id="log-list"></div>
             </div>
 
-            <div id="upcomingCheckins-container" class="tab-content originIsFlex">
-                <div id="upcomingClassRow" class="upcomingClassRow"></div>
+            <div id="settings-container" class="tab-content originIsFlex">
 
-                <div class = "divider-row"><h2>Passes</h2></div>
-
-                <div id = "upcomingCheckinsList" class="upcomingCheckinsList"></div>
-
-                <div id="upcomingCheckinsTable">
-
-                    <div id ="upcoming-checkin-kids-list" class = "upcomingCheckinsList"></div>
-
-                    <div id ="upcoming-checkin-adults-list"></div>
-
-                    <div id ="upcoming-checkin-teens-list"></div>
-
-                </div>
-                   
             </div>
 
 
