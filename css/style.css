@@ -321,7 +321,7 @@ tr {
     font-size: 14px;
     height: 2.0em;
 
-    border: 2px solid #222;
+    /*border: 2px solid #222;*/
     border-right: none;
     text-align: center;
     min-width: 100px;
@@ -334,7 +334,7 @@ tr {
     color: #000000;
     border-radius: 6px;
 
-    border: 2px solid #222;
+    /*border: 2px solid #222;*/
     text-align: center;
     min-width: 100px;
     max-width: 100px;
@@ -371,7 +371,7 @@ tr {
     font-size: 14px;
     height: 2.0em;
     text-align: center;
-    border: 2px solid #333;
+    /*border: 2px solid #333;*/
     min-width: 90px;
 }
 
