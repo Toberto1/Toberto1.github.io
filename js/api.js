@@ -1065,72 +1065,69 @@ async function createUpcomingPassCheckinList() {
 
 async function createUpcomingMembershipCheckinList(classes) {
     const container = document.getElementById("upcomingCheckinsTable");
-    // container.innerHTML = '';
-
-    let hasAthletic = false;
-    let hasNormal = false;
-
-    for (const cls of classes) {
-        if (cls.name === "Athletic") hasAthletic = true;
-        else hasNormal = true;
-    }
 
     const kidsList = document.getElementById("upcoming-checkin-kids-list");
     const adultsList = document.getElementById("upcoming-checkin-adults-list");
     const teensList = document.getElementById("upcoming-checkin-teens-list");
 
+    // Determine which age groups are in the provided class list
+    const hasAthletic = classes.some(cls => cls.name === "Athletic");
+    const hasNormal = classes.some(cls => cls.name !== "Athletic");
+
+    const hasKids = classes.some(cls => cls.age_group.includes("Kid"));
+    const hasTeens = classes.some(cls => cls.age_group.includes("Teen"));
+    const hasAdults = classes.some(cls => cls.age_group.includes("Adult") || cls.age_group.includes("Women's"));
+
+    // If there are no eligible classes at all
     if (!hasAthletic && !hasNormal) {
         const noClassesMessage = document.createElement("div");
         noClassesMessage.classList.add("no-results");
         noClassesMessage.textContent = "No eligible members for upcoming classes.";
         noClassesMessage.style.border = "none";
 
-        if (container.lastChild && container.lastChild.classList && container.lastChild.classList.contains("no-results")) {
-            // already showing message
-            return;
+        if (!container.lastChild?.classList?.contains("no-results")) {
+            container.appendChild(noClassesMessage);
         }
-        container.appendChild(noClassesMessage);
+
         kidsList.classList.add("hidden");
         adultsList.classList.add("hidden");
         teensList.classList.add("hidden");
         return;
     }
 
+    // Apply visibility based on what classes exist
+    kidsList.classList.toggle("hidden", !hasKids);
+    teensList.classList.toggle("hidden", !hasTeens);
+    adultsList.classList.toggle("hidden", !hasAdults);
+
+    // Query members
     const filter = { open: false, class: hasNormal, athletic: hasAthletic };
     const results = await searchAccount("", "name", filter);
 
-
-
-
+    // Clear lists and add headers
     kidsList.innerHTML = '<h3>Kids</h3>';
-    adultsList.innerHTML = '<h3>Adults</h3>';
     teensList.innerHTML = '<h3>Teens</h3>';
+    adultsList.innerHTML = '<h3>Adults</h3>';
 
-    if (results && results.length > 0) {
+    if (!results?.length) return;
 
-        for (const account of results) {
-            for (const membership of account.memberships) {
+    for (const account of results) {
+        for (const membership of account.memberships) {
+            if (membership.is_closed || util.isExpired(membership.end_date)) continue;
 
-                if (membership.is_closed) continue;
-                if (util.isExpired(membership.end_date)) continue;
-
-                if (membership.age_group === "kid") {
-                    kidsList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true, hideButtons: true }));
-                }
-                else if (membership.age_group === "adult") {
-                    adultsList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true, hideButtons: true }));
-
-                }
-                else if (membership.age_group === "teen") {
-                    teensList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true, hideButtons: true }));
-
-                }
+            if (membership.age_group === "kid" && hasKids) {
+                kidsList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true, hideButtons: true }));
+            }
+            else if (membership.age_group === "teen" && hasTeens) {
+                teensList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true, hideButtons: true }));
+            }
+            else if (membership.age_group === "adult" && hasAdults) {
+                adultsList.appendChild(createSearchEntry(account, { disablePassList: true, disableNotes: true, hideButtons: true }));
             }
         }
-
     }
-
 }
+
 
 async function fetchDailyCheckins(startTime, endTime) {
     const response = await fetch(`${IP}/api/logs/fetchDailyCheckins`, {
