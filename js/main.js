@@ -56,7 +56,7 @@ const searchBar = document.getElementById('searchInput');
 const resultsBody = document.getElementById('searchResults');
 
 const addAccountContainer = document.getElementById("addAccount-container");
-
+const dailyCheckinDate = document.getElementById("dailyCheckinDate");
 const filterRow = document.querySelectorAll(".filter-checkbox");
 
 //Set up page
@@ -69,6 +69,18 @@ addAccountContainer.appendChild(dom.createNotesFieldset(null));
 document.getElementById("addAccountNavColumn").appendChild(dom.createSubmitFieldset(null));
 
 
+
+
+
+
+// Default to today
+const today = util.getTodayString();
+dailyCheckinDate.value = today;
+
+// Update label when date changes
+dailyCheckinDate.addEventListener("change", () => {
+    api.loadDailyCheckins(today);
+});
 
 // Run on load to show the first active tab content
 window.addEventListener('DOMContentLoaded', () => {
@@ -84,7 +96,7 @@ window.addEventListener('DOMContentLoaded', () => {
     util.applyPreset('today');
     api.loadLogResults();
     api.loadSearchTableResults();
-    api.loadDailyCheckins(new Date().toISOString().split('T')[0]);
+    api.loadDailyCheckins(today);
 });
 
 document.getElementById("clear-search").addEventListener("click", () => {
@@ -253,7 +265,7 @@ document.querySelectorAll('.only-numbers').forEach(inputElement => {
 });
 
 document.getElementById("refresh-daily-checkins").addEventListener("click", () => {
-    api.loadDailyCheckins(new Date().toISOString().split('T')[0]);
+    api.loadDailyCheckins(today);
 });
 
 document.querySelectorAll('input, select').forEach((element) => {
@@ -649,25 +661,6 @@ function showTopHeaderDialog(message, options = {}) {
     document.body.appendChild(header);
 }
 
-const dailyCheckinDate = document.getElementById("dailyCheckinDate");
 
-// Format date to "Aug 22"
-function formatDate(dateStr) {
-    const [year, month, day] = dateStr.split("-").map(Number);
-    // Create a date in local time (not UTC)
-    const date = new Date(year, month - 1, day);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-// Update label when date changes
-dailyCheckinDate.addEventListener("change", () => {
-    if (dailyCheckinDate.value) {
-        dateLabel.textContent = formatDate(dailyCheckinDate.value);
-    }
-    api.loadDailyCheckins(dailyCheckinDate.value);
-});
-
-// Default to today
-const today = util.getTodayString();
-dailyCheckinDate.value = new Date().toISOString().split('T')[0];
 
 //dom.toggleDarkmode(true);
