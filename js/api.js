@@ -146,6 +146,7 @@ export function createPassList(account) {
                             editLock(3000);
 
                             util.showTopHeaderDialog(`1 ${util.passDBToReadable(key)} pass used successfully!`, { success: true, autoClose: true, duration: 3000 });
+                            loadDailyCheckins(util.getTodayString());
                         }
                     });
             });

@@ -340,11 +340,11 @@ window.saveEditedMember = async function () {
             util.inputMissing(`startDate-${suffix}-${i}`);
             return;
         }
-        if (startDate === '') {
-            showTopHeaderDialog('Start date is required for memberships.', { error: true });
-            util.inputMissing(`startDate-${suffix}-${i}`);
-            return;
-        }
+        // if (startDate === '') {
+        //     showTopHeaderDialog('Start date is required for memberships.', { error: true });
+        //     util.inputMissing(`startDate-${suffix}-${i}`);
+        //     return;
+        // }
         if ((addedDays.value === '' || parseInt(addedDays.value) <= 0) && addedDays.placeholder !== '∞') {
             showTopHeaderDialog('Day duration is required for memberships.', { error: true });
             util.inputMissing(`daysAdded-${suffix}-${i}`);
@@ -402,7 +402,7 @@ window.saveEditedMember = async function () {
             if (row.dataset.membershipId == -1) { //New membership not previously held
 
                 // Step 2: Create membership (if applicable)
-                if (type && startDate) {
+                if (type) {
 
                     const membershipPayload = {
                         userId: AccountId,
@@ -464,7 +464,9 @@ window.saveEditedMember = async function () {
         dom.swapTab(global.tabIndexs.editAccount);
         util.whiteFlash("editAccount-container");
         api.loadSearchTableResults();
+        api.loadDailyCheckins(today);
         dom.swapTab(global.tabIndexs.search);
+        
     } catch (error) {
         showTopHeaderDialog(error, { error: true });
         throw (error);
@@ -533,11 +535,11 @@ window.addNewMember = async function () {
             util.inputMissing(`startDate-add-${i}`);
             return;
         }
-        if (startDate === '') {
-            showTopHeaderDialog('Start date is required for memberships.', { error: true });
-            util.inputMissing(`startDate-add-${i}`);
-            return;
-        }
+        // if (startDate === '') {
+        //     showTopHeaderDialog('Start date is required for memberships.', { error: true });
+        //     util.inputMissing(`startDate-add-${i}`);
+        //     return;
+        // }
         if ((addedDays.value === '' || parseInt(addedDays.value) <= 0) && addedDays.placeholder !== '∞') {
             showTopHeaderDialog('Day duration is required for memberships.', { error: true });
             util.inputMissing(`daysAdded-add-${i}`);
@@ -619,6 +621,7 @@ window.addNewMember = async function () {
         showTopHeaderDialog("Account added successfully", { success: true, autoClose: true, duration: 3000 });
         util.clearAddAccountTab();
         util.whiteFlash("addAccount-container");
+        api.loadDailyCheckins(today);
     } catch (error) {
         showTopHeaderDialog(error, { error: true });
     } finally {
