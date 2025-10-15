@@ -405,6 +405,41 @@ export function getTimeRangeUTC(buffer) {
     return { start: start, end: end};
 }
 
+export function groupPassEntries(entries) {
+    const mergedEntries = entries.slice();
+
+    for (let i = mergedEntries.length - 2; i >= 0; i--) {
+        const current = mergedEntries[i];
+        const next = mergedEntries[i + 1];
+
+        if (
+            current.action === "PASS_AMOUNT_UPDATED" &&
+            next.action === "PASS_AMOUNT_UPDATED" &&
+            current.field === next.field &&
+            current.name === next.name
+        ) {
+            const currentTime = new Date(current.timestamp);
+            const nextTime = new Date(next.timestamp);
+
+            // Compare up to the minute
+            if (
+                currentTime.getFullYear() === nextTime.getFullYear() &&
+                currentTime.getMonth() === nextTime.getMonth() &&
+                currentTime.getDate() === nextTime.getDate() &&
+                currentTime.getHours() === nextTime.getHours() &&
+                currentTime.getMinutes() === nextTime.getMinutes()
+            ) {
+                // Merge into next
+                next.new_value = current.new_value;
+                mergedEntries.splice(i, 1); // Remove current
+                // no i++ needed because we're going backwards
+            }
+        }
+    }
+
+    return mergedEntries;
+}
+
 
 window.applyPreset = applyPreset;
 window.clearAddAccountTab = clearAddAccountTab;

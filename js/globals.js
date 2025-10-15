@@ -126,6 +126,9 @@ export const logActions = {
     INIT_FIELD: 'Initial field setup',
 };
 
+export const membershipFields = {
+    
+}
 
 
 
