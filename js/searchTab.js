@@ -289,7 +289,7 @@ window.loadSearchTableResults = async function () {
 
     } else {
 
-        const results = await searchAccount(searchTerm, searchMethod, filter);
+        const results = util.seperateExpiredMemberships(await searchAccount(searchTerm, searchMethod, filter));
 
         if (results && results.length > 0) {
             resultsBody.innerHTML = '';

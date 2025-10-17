@@ -67,6 +67,7 @@ export function getTabIndex() {
     return tab.checked && (!label || !label.classList.contains("hidden"));
   });
 }
+
 export function getNextVisibleIndex(current, step) {
   const tabs = Array.from(document.querySelectorAll('input[name="tabs"]'));
   let i = current;
@@ -101,33 +102,42 @@ export function getSearchMethod() {
     return searchMethod;
 }
 
+//Log actions -> ui display mapping
 export const logActions = {
-    ACCOUNT_ADDED: 'Account added',
+  ACCOUNT_ADDED: 'Account added',
 
-    NAME_UPDATED: 'Name updated',
-    EMAIL_UPDATED: 'Email updated',
-    PHONE_UPDATED: 'Phone number updated',
+  NAME_UPDATED: 'Name updated',
+  EMAIL_UPDATED: 'Email updated',
+  PHONE_UPDATED: 'Phone number updated',
 
-    PASS_AMOUNT_UPDATED: 'Pass amount updated',
+  PASS_AMOUNT_UPDATED: 'Pass amount updated',
 
-    MEMBERSHIP_ADDED: 'Membership added',
-    MEMBERSHIP_TYPE_UPDATED: 'Membership type updated',
-    MEMBERSHIP_AGE_UPDATED: 'Membership age group updated',
-    MEMBERSHIP_START_UPDATED: 'Membership start date updated',
-    MEMBERSHIP_END_UPDATED: 'Membership end date updated',
-    MEMBERSHIP_LENGTH_UPDATED: 'Membership length updated',
-    MEMBERSHIP_PAUSE_UPDATED: 'Membership paused/resumed',
-    MEMBERSHIP_CLOSE_UPDATED: 'Membership closed',
+  MEMBERSHIP_ADDED: 'Membership added',
+  MEMBERSHIP_UPDATED: 'Membership updated',
+  MEMBERSHIP_STARTED: 'Membership started',
 
-    NOTE_UPDATED: 'Note updated',
-
-    MEMBERSHIP_UNLIMITED_UPDATED: 'Membership unlimted status',
-
-    INIT_FIELD: 'Initial field setup',
+  NOTE_UPDATED: 'Note updated',
 };
 
+export const logFields = {
+  opengympasses: 'Open Gym',
+  classpasses: 'Classes',
+  privatekidpasses: 'Private Kids',
+  privateadultpasses: 'Private Adults',
+  aerialsilkspasses: 'Aerial Silks',
+
+  type: 'Type',
+  age_group: 'Age Group',
+  start_date: 'Start Date',
+  end_date: 'End Date',
+  base_length: 'Base Length',
+  is_paused: 'Pause status',
+  is_unlimited: 'Unlimited status',
+  is_closed: 'Closed status',
+}
+
 export const membershipFields = {
-    
+
 }
 
 

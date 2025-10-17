@@ -184,7 +184,8 @@ export async function loadLogResults() {
                 const action = global.logActions[log.action];
 
                 const changeDiv = document.createElement('label');
-                changeDiv.classList.add("oldToNewSticker");
+                if (!(log.old_value === null && log.new_value === null))
+                    changeDiv.classList.add("oldToNewSticker");
                 const oldValNum = parseFloat(log.old_value);
                 const newValNum = parseFloat(log.new_value);
                 if (log.old_value === "") log.old_value = '" "';
@@ -206,6 +207,10 @@ export async function loadLogResults() {
                         if (log.old_value === null) log.old_value = 'No Date';
                         changeDiv.textContent = `${log.old_value} → ${log.new_value}`;
                         break;
+                    case "MEMBERSHIP_UPDATED":
+                        const displayValues = util.oldToNewDisplay(log.field);
+                        log.old_value = displayValues ? displayValues[0] : log.old_value;
+                        log.new_value = displayValues ? displayValues[1] : log.new_value;
                     default:
                         if (log.old_value !== null && log.new_value !== null) {
                             changeDiv.textContent = `${log.old_value} → ${log.new_value}`;
@@ -214,7 +219,7 @@ export async function loadLogResults() {
                         if (log.old_value === null && log.new_value !== null) changeDiv.textContent = `${log.new_value}`;
                 }
 
-
+                
 
 
                 const fieldDiv = document.createElement('label');
@@ -236,28 +241,8 @@ export async function loadLogResults() {
 
                 body.appendChild(actionDiv);
 
-                const doNotShowFieldList = [
-                    global.logActions.ACCOUNT_ADDED,
-                    global.logActions.MEMBERSHIP_ADDED,
-                    global.logActions.MEMBERSHIP_END_UPDATED,
-                    global.logActions.MEMBERSHIP_START_UPDATED,
-                    global.logActions.MEMBERSHIP_PAUSE_UPDATED,
-                    global.logActions.MEMBERSHIP_TYPE_UPDATED,
-                    global.logActions.MEMBERSHIP_CLOSE_UPDATED,
-                    global.logActions.MEMBERSHIP_AGE_UPDATED,
-                    global.logActions.MEMBERSHIP_UNLIMITED_UPDATED,
-                    global.logActions.MEMBERSHIP_LENGTH_UPDATED,
-                    global.logActions.NOTE_UPDATED,
-
-                    global.logActions.NAME_UPDATED,
-                    global.logActions.EMAIL_UPDATED,
-                    global.logActions.PHONE_UPDATED,
-                ];
-                if (!doNotShowFieldList.includes(action)) {
-                    body.appendChild(fieldDiv);
-
-                }
-
+                if (log.field !== '') body.appendChild(fieldDiv);
+        
                 body.appendChild(changeDiv);
                 row.appendChild(body);
             }

@@ -194,14 +194,8 @@ export function applyPreset(preset) {
 }
 
 export function passDBToReadable(key) {
-    switch (key) {
-        case 'opengympasses': return 'Open Gym';
-        case 'classpasses': return 'Classes';
-        case 'privatekidpasses': return 'Private Kid';
-        case 'privateadultpasses': return 'Private Adult';
-        case 'aerialsilkspasses': return 'Aerial Silks';
-    }
-    return "";
+    console.log(key);
+    return global.logFields[key] || "";
 }
 
 export function toggleElement(id) {
@@ -438,6 +432,40 @@ export function groupPassEntries(entries) {
     }
 
     return mergedEntries;
+}
+
+export function accountOnlyHasExpired(account) {
+    for (let membership of account.memberships) {
+        if (!isExpired(membership.end_date)) {
+            return false;
+        }
+    }
+    return true;
+} 
+
+export function accountHasPasses(account) {
+    if (account.opengympasses > 0) return true;
+    if (account.classpasses > 0) return true;
+    if (account.privatekidpasses > 0) return true;
+    if (account.privateadultpasses > 0) return true;
+    if (account.aerialsilkspasses > 0) return true;
+    return false;   
+}
+
+export function seperateExpiredMemberships(accounts) {
+    const activeAccounts = accounts.filter(acc =>  !accountOnlyHasExpired(acc) || accountHasPasses(acc));
+    const expiredAccounts = accounts.filter(acc => accountOnlyHasExpired(acc) && !accountHasPasses(acc));
+    return [...activeAccounts, ...expiredAccounts];
+}
+
+
+export function oldToNewDisplay(field) {
+    switch (field) {
+        case 'Pause status': return ['Paused', 'Active'];
+        case 'Unlimited status': return ['Limited', 'Unlimited'];
+        case 'Closed status': return ['Open', 'Closed'];
+        default: return null;
+    }
 }
 
 
