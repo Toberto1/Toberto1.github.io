@@ -202,11 +202,6 @@ export async function loadLogResults() {
                         changeDiv.textContent = `+${log.new_value} days`;
                         changeDiv.classList.add("additive-update");
                         break;
-                    case "MEMBERSHIP_END_UPDATED":
-                    case "MEMBERSHIP_START_UPDATED":
-                        if (log.old_value === null) log.old_value = 'No Date';
-                        changeDiv.textContent = `${log.old_value} → ${log.new_value}`;
-                        break;
                     case "MEMBERSHIP_UPDATED":
                         const displayValues = util.oldToNewDisplay(log.field);
                         log.old_value = displayValues ? displayValues[0] : log.old_value;
@@ -219,7 +214,7 @@ export async function loadLogResults() {
                         if (log.old_value === null && log.new_value !== null) changeDiv.textContent = `${log.new_value}`;
                 }
 
-                
+
 
 
                 const fieldDiv = document.createElement('label');
@@ -232,8 +227,13 @@ export async function loadLogResults() {
                 if (util.passDBToReadable(log.field) !== '') {
                     fieldDiv.textContent = util.passDBToReadable(log.field);
                     fieldDiv.classList.add(`${log.field}-color`);
+                }
+                if (util.membershipDBToReadable(log.field) !== '') {
+                    fieldDiv.textContent = util.membershipDBToReadable(log.field);
+                    fieldDiv.classList.add(`${log.field}-color`);
                 } else {
-                    fieldDiv.textContent = log.field;
+                    fieldDiv.textContent = global.logFields[log.field] || log.field;
+                    fieldDiv.classList.add(`generic-color`);
                 }
 
                 const actionDiv = document.createElement('div');
@@ -241,10 +241,14 @@ export async function loadLogResults() {
 
                 body.appendChild(actionDiv);
 
-                if (log.field !== '') body.appendChild(fieldDiv);
-        
+                if (log.field !== '') {
+                    body.appendChild(fieldDiv);
+                }
+
                 body.appendChild(changeDiv);
                 row.appendChild(body);
+
+
             }
 
             resultsBodylog.appendChild(row);

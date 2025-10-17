@@ -411,6 +411,11 @@ tr {
     color: #ffffff;
 }
 
+.generic-color {
+    background-color: var(--button-color);
+    color: #000000;
+}
+
 .athletic-color {
     background-color: var(--athletic-color);
     color: #000000;

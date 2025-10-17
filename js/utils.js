@@ -194,7 +194,6 @@ export function applyPreset(preset) {
 }
 
 export function passDBToReadable(key) {
-    console.log(key);
     return global.logFields[key] || "";
 }
 
@@ -461,11 +460,20 @@ export function seperateExpiredMemberships(accounts) {
 
 export function oldToNewDisplay(field) {
     switch (field) {
-        case 'Pause status': return ['Paused', 'Active'];
-        case 'Unlimited status': return ['Limited', 'Unlimited'];
-        case 'Closed status': return ['Open', 'Closed'];
+        case 'is_paused': return ['Paused', 'Active'];
+        case 'is_unlimited': return ['Limited', 'Unlimited'];
+        case 'is_closed': return ['Actice', 'Closed'];
         default: return null;
     }
+}
+
+export function membershipDBToReadable(type) {
+    switch (type) {
+        case 'open': return 'Open Gym';
+        case 'class': return 'Classes';
+        case 'athletic' : return 'Athletic';
+    }
+    return "";
 }
 
 

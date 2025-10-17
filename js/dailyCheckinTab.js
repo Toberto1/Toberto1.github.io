@@ -97,15 +97,19 @@ export async function loadDailyCheckins(date) {
             actionDiv.textContent = global.logActions[entry.action];
 
             const fieldDiv = document.createElement("div");
-            fieldDiv.textContent = util.passDBToReadable(entry.field);
 
-            if (fieldDiv.textContent !== '') {
+            if (entry.field !== '') {
                 fieldDiv.classList.add("sticker");
 
                 if (util.passDBToReadable(entry.field) !== '') {
                     fieldDiv.textContent = util.passDBToReadable(entry.field);
                     fieldDiv.classList.add(`${entry.field}-color`);
-                } else {
+                } else if (util.membershipDBToReadable(entry.field) !== '') {
+                    fieldDiv.textContent = util.membershipDBToReadable(entry.field);
+                    fieldDiv.classList.add(`${entry.field}-color`);
+                }
+                
+                else {
                     fieldDiv.textContent = entry.field;
                 }
             }
